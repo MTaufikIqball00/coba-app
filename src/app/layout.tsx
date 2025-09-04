@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Sidebar from "./components/sidebar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,36 +30,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <div className="flex min-h-screen">
-          {/* Sidebar */}
-          <Sidebar />
-
-          {/* Main Content */}
-          <div className="flex-1 ml-60 flex flex-col">
-            <header className="w-full bg-transparent my-1.5 flex justify-center ">
-              <div className="w-[95.4%] rounded-md shadow-md bg-gradient-to-r from-[#2366d1] to-[#57a6ff] px-8 py-5 flex items-center justify-between">
-                <a
-                  href="/"
-                  className="font-bold text-white text-2xl tracking-wide drop-shadow-sm hover:text-blue-100 transition-colors duration-200"
-                >
-                  Sistem Manajemen Pembelajaran
-                  <span className="ml-2 px-3 py-1 rounded-xl bg-white/20 text-sm font-semibold tracking-tight">
-                    "Jabar Juara"
-                  </span>
-                </a>
-              </div>
-            </header>
-
-            <main className="flex-grow px-6 ">{children}</main>
-
-            {/* Footer */}
-            {/* <footer>
-              <div className="border-t p-4 mt-8 text-center">
-                &copy; 2025 CobaNext. All rights reserved.
-              </div>
-            </footer> */}
-          </div>
-        </div>
+        {children}
       </body>
     </html>
   );

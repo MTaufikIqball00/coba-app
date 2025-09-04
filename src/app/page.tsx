@@ -1,11 +1,10 @@
-import Link from "next/link";
-import blog from "./blog/page";
-import Dashboard from "./dashboard/page";
+
+import Dashboard from "./components/Dashboard";
 
 export default function Home() {
   return (
     <>
-      <Dashboard/>
+      <Dashboard />
     </>
   );
 }
