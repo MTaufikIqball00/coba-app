@@ -139,6 +139,9 @@ export async function middleware(request: NextRequest) {
       let redirectUrl = "/dashboard"; // Default for students
       if (session.role === "teacher") redirectUrl = "/teacher/dashboard";
       if (session.role === "admin_langganan") redirectUrl = "/admin/langganan";
+      if (session.role === "kepala_sekolah") redirectUrl = "/kepala/dashboard";
+      if (session.role === "admin_sekolah")
+        redirectUrl = "/admin-sekolah/dashboard";
       return NextResponse.redirect(new URL(redirectUrl, request.url));
     } else {
       return NextResponse.redirect(new URL("/login", request.url));

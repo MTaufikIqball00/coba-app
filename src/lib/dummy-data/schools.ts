@@ -10,6 +10,10 @@ export type School = {
   headmaster: string;
   subscriptionStatus: "active" | "limited" | "expired" | "none";
   registeredDate: string;
+  logo: string;
+  level: "SMA" | "SMK" | "MA";
+  academicYear: string;
+  userCapacity: number;
 };
 
 export const schools: School[] = [
@@ -25,6 +29,10 @@ export const schools: School[] = [
     headmaster: "Dr. H. Iwan Setiawan, M.Pd.",
     subscriptionStatus: "active",
     registeredDate: "2022-08-15",
+    logo: "/assets/school-logos/sman1-bandung.png",
+    level: "SMA",
+    academicYear: "2023/2024",
+    userCapacity: 1500,
   },
   {
     id: "sch-002",
@@ -38,6 +46,10 @@ export const schools: School[] = [
     headmaster: "Dra. Hj. Retno Listyarti, M.Si.",
     subscriptionStatus: "active",
     registeredDate: "2022-09-01",
+    logo: "/assets/school-logos/sman3-jakarta.png",
+    level: "SMA",
+    academicYear: "2023/2024",
+    userCapacity: 1200,
   },
   {
     id: "sch-003",
@@ -51,6 +63,10 @@ export const schools: School[] = [
     headmaster: "Drs. H. M. Basuki, M.M.",
     subscriptionStatus: "limited",
     registeredDate: "2023-01-20",
+    logo: "/assets/school-logos/sman5-surabaya.png",
+    level: "SMA",
+    academicYear: "2023/2024",
+    userCapacity: 1800,
   },
   {
     id: "sch-004",
@@ -64,6 +80,10 @@ export const schools: School[] = [
     headmaster: "Drs. Munjahid, M.Pd.",
     subscriptionStatus: "expired",
     registeredDate: "2022-11-10",
+    logo: "/assets/school-logos/sman1-yogya.png",
+    level: "SMA",
+    academicYear: "2023/2024",
+    userCapacity: 1000,
   },
   {
     id: "sch-005",
@@ -77,6 +97,10 @@ export const schools: School[] = [
     headmaster: "I Made Raka, S.Pd., M.Pd.",
     subscriptionStatus: "active",
     registeredDate: "2023-03-05",
+    logo: "/assets/school-logos/sman1-denpasar.png",
+    level: "SMA",
+    academicYear: "2023/2024",
+    userCapacity: 1300,
   },
   {
     id: "sch-006",
@@ -90,5 +114,9 @@ export const schools: School[] = [
     headmaster: "Drs. Bambang Aryan Soekisno, M.Pd",
     subscriptionStatus: "none",
     registeredDate: "2023-05-10",
-  }
+    logo: "/assets/school-logos/sman1-bogor.png",
+    level: "SMA",
+    academicYear: "2023/2024",
+    userCapacity: 1400,
+  },
 ];

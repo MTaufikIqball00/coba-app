@@ -102,12 +102,12 @@ const schoolAdminPanelMainMenu: MenuItem[] = [
     href: "/admin-sekolah/dashboard",
   },
   { name: "Manajemen Guru", icon: "👨‍🏫", href: "/admin-sekolah/teachers" },
+  { name: "Manajemen Murid", icon: "👥", href: "/admin-sekolah/students" },
   {
     name: "Manajemen Kepala Sekolah",
     icon: "🧑‍💼",
-    href: "/admin-sekolah/headmasters",
+    href: "/admin-sekolah/headmaster",
   },
-  { name: "Manajemen Murid", icon: "👥", href: "/admin-sekolah/students" },
 ];
 
 const schoolAdminPanelSubMenu: MenuItem[] = [
@@ -448,7 +448,7 @@ const Sidebar = () => {
               {/* ✅ NEW: Sub menu section title */}
               <div className="mb-4 px-2">
                 <p className="text-xs text-gray-300 uppercase tracking-wide font-semibold">
-                  {user.role === "admin_langganan"
+                  {user?.role === "admin_langganan"
                     ? "Manajemen Langganan"
                     : "Menu Tambahan"}
                 </p>
