@@ -6,47 +6,42 @@ import crypto from "crypto";
 
 // ✅ Fixed validation schema to match Quiz interface exactly
 const answerChoiceSchema = z.object({
-  id: z.string().optional(), // Optional for creation, will be generated
+  id: z.string().optional(),
   text: z.string().min(1, "Choice text is required"),
 });
 
 const questionSchema = z.object({
-  id: z.string().optional(), // Optional for creation, will be generated
+  id: z.string().optional(),
   questionText: z.string().min(1, "Question text is required"),
   questionType: z.enum(["multiple_choice", "essay"]),
   points: z.number().min(1).optional().default(10),
   choices: z.array(answerChoiceSchema).optional(),
-  correctAnswer: z.string().optional(), // For multiple_choice, this is the text of correct choice
-  // Essay specific fields from frontend
+  correctAnswer: z.string().optional(),
+  // Essay specific fields - optional to match store
   sampleAnswer: z.string().optional(),
   maxScore: z.number().min(1).max(100).optional(),
   weight: z.number().min(1).max(100).optional(),
   rubric: z.string().optional(),
 });
 
-const createQuizSchema = z
-  .object({
-    title: z
-      .string()
-      .min(3, "Title must be at least 3 characters long")
-      .max(200),
-    description: z.string().max(1000).optional().default(""),
-    subject: z.string().min(1, "Subject is required").max(100),
-    duration: z.number().min(5).max(300).optional().default(60),
-    maxAttempts: z.number().min(1).max(10).optional().default(1),
-    showResults: z.boolean().optional().default(true),
-    randomizeQuestions: z.boolean().optional().default(false),
-    passingScore: z.number().min(0).max(100).optional().default(70),
-    startDate: z.string().optional(),
-    endDate: z.string().optional(),
-    instructions: z.string().max(2000).optional(),
-    allowReview: z.boolean().optional().default(true),
-    shuffleAnswers: z.boolean().optional().default(false),
-    questions: z
-      .array(questionSchema)
-      .min(1, "At least one question is required"),
-  })
-  ;
+const createQuizSchema = z.object({
+  title: z.string().min(3, "Title must be at least 3 characters long").max(200),
+  description: z.string().max(1000).optional().default(""),
+  subject: z.string().min(1, "Subject is required").max(100),
+  duration: z.number().min(5).max(300).optional().default(60),
+  maxAttempts: z.number().min(1).max(10).optional().default(1),
+  showResults: z.boolean().optional().default(true),
+  randomizeQuestions: z.boolean().optional().default(false),
+  passingScore: z.number().min(0).max(100).optional().default(70),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+  instructions: z.string().max(2000).optional(),
+  allowReview: z.boolean().optional().default(true),
+  shuffleAnswers: z.boolean().optional().default(false),
+  questions: z
+    .array(questionSchema)
+    .min(1, "At least one question is required"),
+});
 
 // GET all quizzes for the logged-in teacher
 export async function GET(request: NextRequest) {
@@ -94,10 +89,10 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
 
-    // ✅ Validate input using Zod schema
     const parseResult = createQuizSchema.safeParse(body);
 
     if (!parseResult.success) {
+      console.error("Zod validation error:", JSON.stringify(parseResult.error.flatten().fieldErrors, null, 2));
       return NextResponse.json(
         {
           success: false,
@@ -110,82 +105,69 @@ export async function POST(request: NextRequest) {
 
     const validatedData = parseResult.data;
 
-    // ✅ Process questions with proper typing
+    // ✅ Process questions - Fixed essay handling
     const processedQuestions: Question[] = validatedData.questions.map(
       (q): Question => {
         const questionId = `q-${crypto.randomBytes(4).toString("hex")}`;
-        let choices: AnswerChoice[] | undefined = undefined;
-        let correctAnswerId: string | undefined = undefined;
 
-        if (
-          q.questionType === "multiple_choice" &&
-          q.choices &&
-          q.correctAnswer
-        ) {
-          // Create choices with unique IDs
-          choices = q.choices.map(
-            (c): AnswerChoice => ({
-              id: c.id || `c-${crypto.randomBytes(4).toString("hex")}`,
-              text: c.text,
-            })
-          );
+        if (q.questionType === "multiple_choice") {
+          if (!q.choices || !q.correctAnswer) {
+            throw new Error(
+              "Multiple choice questions require choices and correctAnswer"
+            );
+          }
 
-          // Find the correct answer ID by matching text
-          correctAnswerId = choices.find((c) => c.text === q.correctAnswer)?.id;
+          const choices: AnswerChoice[] = q.choices.map((c) => ({
+            id: c.id || `c-${crypto.randomBytes(4).toString("hex")}`,
+            text: c.text,
+          }));
+
+          const correctAnswerId = choices.find(
+            (c) => c.text === q.correctAnswer
+          )?.id;
 
           return {
             id: questionId,
             questionText: q.questionText,
-            questionType: q.questionType,
+            questionType: "multiple_choice",
             choices: choices,
             correctAnswer: correctAnswerId,
             points: q.points,
           };
-        } else if (q.questionType === "essay") {
-            return {
-                id: questionId,
-                questionText: q.questionText,
-                questionType: q.questionType,
-                points: q.points,
-                sampleAnswer: q.sampleAnswer,
-                maxScore: q.maxScore,
-                weight: q.weight,
-                rubric: q.rubric,
-            };
+        } else {
+          // Essay question - match store structure exactly
+          return {
+            id: questionId,
+            questionText: q.questionText,
+            questionType: "essay",
+            points: q.points,
+            sampleAnswer: q.sampleAnswer,
+            maxScore: q.maxScore,
+            weight: q.weight,
+            rubric: q.rubric,
+          };
         }
-
-        // Fallback for unexpected types, though Zod should prevent this
-        return {
-          id: questionId,
-          questionText: q.questionText,
-          questionType: q.questionType,
-          points: q.points,
-        };
       }
     );
 
-    // ✅ Calculate total points
     const totalPoints = processedQuestions.reduce(
       (sum, q) => sum + (q.points || 10),
       0
     );
 
-    // ✅ Create new quiz with proper typing
     const newQuiz: Quiz = {
       id: `quiz-${crypto.randomBytes(4).toString("hex")}`,
       teacherId: session.userId,
       title: validatedData.title,
-      description: validatedData.description, // Now guaranteed to be string
+      description: validatedData.description,
       subject: validatedData.subject,
       questions: processedQuestions,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      // Required properties
       participants: 0,
       isActive: true,
       averageScore: 0,
       duration: validatedData.duration,
-      // Optional properties
       maxAttempts: validatedData.maxAttempts,
       showResults: validatedData.showResults,
       randomizeQuestions: validatedData.randomizeQuestions,
@@ -284,7 +266,6 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // ✅ Handle partial updates properly
     const updateSchema = createQuizSchema.partial();
     const parseResult = updateSchema.safeParse(updateData);
 
@@ -301,44 +282,56 @@ export async function PUT(request: NextRequest) {
 
     const validatedUpdates = parseResult.data;
 
-    // ✅ Process questions if provided
+    // ✅ Process questions if provided - Fixed essay handling
     let processedQuestions: Question[] | undefined = undefined;
     if (validatedUpdates.questions) {
       processedQuestions = validatedUpdates.questions.map((q): Question => {
         const questionId = q.id || `q-${crypto.randomBytes(4).toString("hex")}`;
-        let choices: AnswerChoice[] | undefined = undefined;
-        let correctAnswerId: string | undefined = undefined;
 
-        if (
-          q.questionType === "multiple_choice" &&
-          q.choices &&
-          q.correctAnswer
-        ) {
-          choices = q.choices.map(
-            (c): AnswerChoice => ({
-              id: c.id || `c-${crypto.randomBytes(4).toString("hex")}`,
-              text: c.text,
-            })
-          );
-          correctAnswerId = choices.find((c) => c.text === q.correctAnswer)?.id;
+        if (q.questionType === "multiple_choice") {
+          if (!q.choices || !q.correctAnswer) {
+            throw new Error(
+              "Multiple choice questions require choices and correctAnswer"
+            );
+          }
+
+          const choices: AnswerChoice[] = q.choices.map((c) => ({
+            id: c.id || `c-${crypto.randomBytes(4).toString("hex")}`,
+            text: c.text,
+          }));
+
+          const correctAnswerId = choices.find(
+            (c) => c.text === q.correctAnswer
+          )?.id;
+
+          return {
+            id: questionId,
+            questionText: q.questionText,
+            questionType: "multiple_choice",
+            choices: choices,
+            correctAnswer: correctAnswerId,
+            points: q.points,
+          };
+        } else {
+          // Essay question - match store structure exactly
+          return {
+            id: questionId,
+            questionText: q.questionText,
+            questionType: "essay",
+            points: q.points,
+            sampleAnswer: q.sampleAnswer,
+            maxScore: q.maxScore,
+            weight: q.weight,
+            rubric: q.rubric,
+          };
         }
-
-        return {
-          id: questionId,
-          questionText: q.questionText,
-          questionType: q.questionType,
-          choices: choices,
-          correctAnswer: correctAnswerId,
-          points: q.points,
-        };
       });
     }
 
-    // ✅ Create properly typed update object
     const updatedQuiz: Quiz = {
       ...existingQuiz,
       ...validatedUpdates,
-      questions: processedQuestions || existingQuiz.questions, // Use processed questions or keep existing
+      questions: processedQuestions || existingQuiz.questions,
       updatedAt: new Date().toISOString(),
       totalPoints: processedQuestions
         ? processedQuestions.reduce((sum, q) => sum + (q.points || 10), 0)

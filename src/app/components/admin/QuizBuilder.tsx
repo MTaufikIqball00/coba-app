@@ -4,7 +4,8 @@ import { useForm, useFieldArray, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import React from "react";
 import {
   FiPlus,
   FiTrash2,
@@ -96,6 +97,7 @@ export default function QuizBuilder() {
     handleSubmit,
     watch,
     formState: { errors, isSubmitting },
+    setValue,
   } = useForm<QuizFormInputs>({
     resolver: zodResolver(quizSchema),
     defaultValues: {
@@ -396,6 +398,7 @@ export default function QuizBuilder() {
                     watch={watch}
                     errors={errors}
                     remove={removeQuestion}
+                    setValue={setValue}
                     totalQuestions={fields.length}
                   />
                 )}
@@ -533,6 +536,7 @@ function QuestionField({
   watch,
   errors,
   remove,
+  setValue,
   totalQuestions,
 }: any) {
   const {
@@ -547,6 +551,13 @@ function QuestionField({
   const questionType = (control as any)._getWatch(
     `questions.${index}.questionType`
   );
+
+  React.useEffect(() => {
+    if (questionType === 'essay') {
+      setValue(`questions.${index}.choices`, []);
+      setValue(`questions.${index}.correctAnswer`, undefined);
+    }
+  }, [questionType, index, setValue]);
 
   return (
     <div className="animate-slideInRight">

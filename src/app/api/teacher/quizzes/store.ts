@@ -16,6 +16,10 @@ export interface Question {
   choices?: AnswerChoice[]; // Only for multiple_choice
   correctAnswer?: string; // For multiple_choice, this is the ID of the correct AnswerChoice. For essay, it's null.
   points?: number; // Points for this question
+  sampleAnswer?: string; // For essay
+  maxScore?: number; // For essay
+  weight?: number; // For essay
+  rubric?: string; // For essay
 }
 
 // ✅ Enhanced Quiz interface with missing properties
