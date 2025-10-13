@@ -5,6 +5,7 @@ export const dummyTeachers = [
     subject: "Matematika",
     classes: ["10-A", "10-B", "11-A"],
     teachingHours: 24,
+    status: "Active",
   },
   {
     id: "T002",
@@ -12,6 +13,7 @@ export const dummyTeachers = [
     subject: "Bahasa Indonesia",
     classes: ["10-A", "10-C", "12-B"],
     teachingHours: 22,
+    status: "Active",
   },
   {
     id: "T003",
@@ -19,6 +21,7 @@ export const dummyTeachers = [
     subject: "Fisika",
     classes: ["11-A", "11-B", "12-A"],
     teachingHours: 20,
+    status: "Active",
   },
   {
     id: "T004",
@@ -26,6 +29,7 @@ export const dummyTeachers = [
     subject: "Kimia",
     classes: ["11-C", "12-B", "12-C"],
     teachingHours: 21,
+    status: "Non-Active",
   },
   {
     id: "T005",
@@ -33,5 +37,6 @@ export const dummyTeachers = [
     subject: "Biologi",
     classes: ["10-B", "11-B", "12-C"],
     teachingHours: 23,
+    status: "Active",
   },
 ];

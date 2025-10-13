@@ -25,7 +25,7 @@ export default function ManajemenGuruAdminPage() {
     setIsModalOpen(false);
   };
 
-  const handleSaveTeacher = (formData: Omit<Teacher, "id" | "classes"> & { classes: string }) => {
+  const handleSaveTeacher = (formData: Omit<Teacher, "id" | "classes"> & { classes: string; status: "Active" | "Non-Active" }) => {
     const classArray = formData.classes.split(',').map(c => c.trim());
     if (selectedTeacher) {
       // Edit
@@ -83,6 +83,20 @@ export default function ManajemenGuruAdminPage() {
     {
       header: "Jam/Minggu",
       accessor: (row: Teacher) => `${row.teachingHours} jam`,
+    },
+    {
+        header: "Status",
+        accessor: (row: Teacher) => (
+            <span
+                className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                    row.status === "Active"
+                        ? "bg-green-100 text-green-800"
+                        : "bg-red-100 text-red-800"
+                }`}
+            >
+                {row.status}
+            </span>
+        ),
     },
     {
       header: "Aksi",
@@ -169,7 +183,7 @@ function TeacherFormModal({
 }: {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (formData: Omit<Teacher, "id" | "classes"> & { classes: string }) => void;
+  onSave: (formData: Omit<Teacher, "id" | "classes"> & { classes: string; status: "Active" | "Non-Active" }) => void;
   teacher: Teacher | null;
 }) {
   const [formData, setFormData] = useState({
@@ -177,6 +191,7 @@ function TeacherFormModal({
     subject: teacher?.subject || "",
     classes: teacher?.classes.join(", ") || "",
     teachingHours: teacher?.teachingHours || 0,
+    status: teacher?.status || "Active",
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
@@ -268,6 +283,20 @@ function TeacherFormModal({
               className={`mt-1 block w-full border rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 ${errors.teachingHours ? 'border-red-500' : 'border-gray-300'}`}
             />
             {errors.teachingHours && <p className="text-xs text-red-600 mt-1">{errors.teachingHours}</p>}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Status
+            </label>
+            <select
+              name="status"
+              value={formData.status}
+              onChange={handleChange}
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="Active">Active</option>
+              <option value="Non-Active">Non-Active</option>
+            </select>
           </div>
         </div>
         <div className="mt-6 flex justify-end gap-3">

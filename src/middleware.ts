@@ -79,20 +79,20 @@ export async function middleware(request: NextRequest) {
     }
 
     // 2. Role-based path protection
-    // Block students/admins from teacher paths
-    if (isTeacherPath && session.role !== "teacher") {
+    // Block students/admins from teacher paths, but allow admin_langganan
+    if (isTeacherPath && session.role !== "teacher" && session.role !== "admin_langganan") {
       return NextResponse.redirect(new URL("/dashboard", request.url));
     }
-    // Block teachers/students from admin langganan paths
+    // Block everyone except admin_langganan from their dedicated path
     if (isAdminLanggananPath && session.role !== "admin_langganan") {
       return NextResponse.redirect(new URL("/dashboard", request.url));
     }
-    // Block students/others from kepala paths
-    if (isHeadmasterPath && session.role !== "kepala_sekolah") {
+    // Block students/others from kepala paths, but allow admin_langganan
+    if (isHeadmasterPath && session.role !== "kepala_sekolah" && session.role !== "admin_langganan") {
       return NextResponse.redirect(new URL("/dashboard", request.url));
     }
-    // Block non-school-admins from admin-sekolah paths
-    if (isSchoolAdminPath && session.role !== "admin_sekolah") {
+    // Block non-school-admins from admin-sekolah paths, but allow admin_langganan
+    if (isSchoolAdminPath && session.role !== "admin_sekolah" && session.role !== "admin_langganan") {
       return NextResponse.redirect(new URL("/dashboard", request.url));
     }
     // Block teachers/admins from student paths

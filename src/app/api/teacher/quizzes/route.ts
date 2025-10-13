@@ -30,9 +30,9 @@ const createQuizSchema = z
       .string()
       .min(3, "Title must be at least 3 characters long")
       .max(200),
-    description: z.string().max(1000).default(""), // ✅ Fixed: provide default empty string
+    description: z.string().max(1000).optional().default(""),
     subject: z.string().min(1, "Subject is required").max(100),
-    duration: z.number().min(5).max(300).default(60), // 5 min to 5 hours
+    duration: z.number().min(5).max(300).optional().default(60),
     maxAttempts: z.number().min(1).max(10).optional().default(1),
     showResults: z.boolean().optional().default(true),
     randomizeQuestions: z.boolean().optional().default(false),
@@ -46,22 +46,7 @@ const createQuizSchema = z
       .array(questionSchema)
       .min(1, "At least one question is required"),
   })
-  .refine(
-    (data) => {
-      // Validate that multiple choice questions have choices and correct answer
-      return data.questions.every((q) => {
-        if (q.questionType === "multiple_choice") {
-          return q.choices && q.choices.length >= 2 && q.correctAnswer;
-        }
-        return true;
-      });
-    },
-    {
-      message:
-        "Multiple choice questions must have at least 2 choices and a correct answer",
-      path: ["questions"],
-    }
-  );
+  ;
 
 // GET all quizzes for the logged-in teacher
 export async function GET(request: NextRequest) {
