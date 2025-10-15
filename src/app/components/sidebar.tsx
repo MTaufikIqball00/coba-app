@@ -14,7 +14,6 @@ interface User {
   school?: {
     province: string;
   };
-  // Add any other user properties you might have
 }
 
 // Define menu item types
@@ -22,7 +21,7 @@ interface MenuItem {
   name: string;
   icon: string;
   href: string;
-  badge?: string; // Optional badge for notifications
+  badge?: string;
 }
 
 // Define menu structures for students
@@ -69,7 +68,6 @@ const schoolAdminSubMenu: MenuItem[] = [
   { name: "Log Aktivitas", icon: "📑", href: "/admin/activity-logs" },
 ];
 
-// ✅ UPDATED: Define menu structures for admin langganan
 const superAdminMainMenu: MenuItem[] = [
   { name: "Dashboard Admin", icon: "🏠", href: "/admin/langganan" },
   {
@@ -82,7 +80,6 @@ const superAdminMainMenu: MenuItem[] = [
   { name: "Log Aktivitas", icon: "📑", href: "/admin/langganan/activity-logs" },
 ];
 
-// Menu for Kepala Sekolah (headmaster)
 const headmasterMainMenu: MenuItem[] = [
   { name: "Dashboard Kepala", icon: "🧑‍🏫", href: "/kepala/dashboard" },
   { name: "Manajemen Guru", icon: "👨‍🏫", href: "/kepala/teachers" },
@@ -94,7 +91,6 @@ const headmasterSubMenu: MenuItem[] = [
   { name: "Laporan Akademik", icon: "📊", href: "/kepala/academic-reports" },
 ];
 
-// Menu for Admin Sekolah (school admin separate role)
 const schoolAdminPanelMainMenu: MenuItem[] = [
   {
     name: "Dashboard Admin Sekolah",
@@ -122,20 +118,26 @@ const superAdminSubMenu: MenuItem[] = [
 
 const Sidebar = () => {
   const pathname = usePathname();
-  const [user, setUser] = useState<User | null>(() => {
-    try {
-      if (typeof window !== "undefined") {
-        const storedUser = localStorage.getItem("user");
-        if (storedUser) return JSON.parse(storedUser) as User;
-      }
-    } catch (e) {
-      // ignore parsing errors
-    }
-    return null;
-  });
+  
+  // ✅ FIX: Initialize with null, load in useEffect
+  const [user, setUser] = useState<User | null>(null);
+  const [mounted, setMounted] = useState(false);
   const [activeItem, setActiveItem] = useState("");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileMenuOpen, setProfileMenuOpen] = useState(false);
+
+  // ✅ FIX: Load user data only on client side
+  useEffect(() => {
+    try {
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        setUser(JSON.parse(storedUser) as User);
+      }
+    } catch (e) {
+      console.error("Failed to parse user data from localStorage", e);
+    }
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     // Keep user in sync with localStorage if it changes elsewhere
@@ -149,13 +151,10 @@ const Sidebar = () => {
       }
     };
 
-    // run once to ensure latest
-    handleStorage();
     window.addEventListener("storage", handleStorage);
     return () => window.removeEventListener("storage", handleStorage);
-  }, [pathname]);
+  }, []);
 
-  // ✅ UPDATED: Select menu based on user role and filter by province
   const getMenuItems = () => {
     if (!user) {
       return { main: [], sub: [] };
@@ -186,7 +185,7 @@ const Sidebar = () => {
         mainMenus = [...superAdminMainMenu];
         subMenus = [...superAdminSubMenu];
         break;
-      default: // student
+      default:
         mainMenus = [...studentMainMenu];
         subMenus = [...studentSubMenu];
         break;
@@ -210,9 +209,8 @@ const Sidebar = () => {
 
   const { main: mainMenuItems, sub: subMenuItems } = getMenuItems();
 
-  // Effect to sync active item with the current path
   useEffect(() => {
-    const { main, sub } = getMenuItems(); // Rerun to get current menus
+    const { main, sub } = getMenuItems();
     const allItems = [...main, ...sub];
     const currentItem = allItems.find(
       (item) => item.href !== "#" && pathname.startsWith(item.href)
@@ -222,7 +220,7 @@ const Sidebar = () => {
     } else {
       setActiveItem("");
     }
-  }, [pathname, user]); // Depend on user to re-evaluate menus
+  }, [pathname, user]);
 
   const handleMenuClick = (itemName: string) => {
     setActiveItem(itemName);
@@ -235,7 +233,6 @@ const Sidebar = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
-  // ✅ UPDATED: Enhanced render menu item with badge support
   const renderMenuItem = (item: MenuItem) => {
     const isActive = activeItem === item.name;
     const isImplemented = item.href !== "#";
@@ -271,7 +268,6 @@ const Sidebar = () => {
           {item.icon}
         </span>
         <span className="whitespace-nowrap flex-1">{item.name}</span>
-        {/* ✅ NEW: Badge support */}
         {item.badge && (
           <span className="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-0.5 font-semibold">
             {item.badge}
@@ -281,7 +277,6 @@ const Sidebar = () => {
     );
   };
 
-  // ✅ UPDATED: Enhanced mobile menu item with badge support
   const renderMobileMenuItem = (item: MenuItem) => {
     const isActive = activeItem === item.name;
     const isImplemented = item.href !== "#";
@@ -317,7 +312,6 @@ const Sidebar = () => {
           {item.icon}
         </span>
         <span className="whitespace-nowrap flex-1">{item.name}</span>
-        {/* ✅ NEW: Badge support */}
         {item.badge && (
           <span className="ml-2 bg-red-500 text-white text-xs rounded-full px-2 py-0.5 font-semibold">
             {item.badge}
@@ -327,7 +321,6 @@ const Sidebar = () => {
     );
   };
 
-  // ✅ UPDATED: Dynamic logo and brand name based on role
   const getBrandInfo = () => {
     switch (user?.role) {
       case "admin_langganan":
@@ -359,8 +352,16 @@ const Sidebar = () => {
 
   const brandInfo = getBrandInfo();
 
-  // If user is not available yet, we'll still render the sidebar skeleton
-  // and let getMenuItems determine menus (it handles null user safely).
+  // ✅ FIX: Show loading state during hydration
+  if (!mounted) {
+    return (
+      <aside className="hidden lg:block w-64 bg-[#2366d1] text-white fixed h-full overflow-y-auto hide-scrollbar rounded-r-md z-30">
+        <div className="flex items-center justify-center h-full">
+          <div className="animate-pulse text-white">Loading...</div>
+        </div>
+      </aside>
+    );
+  }
 
   return (
     <>
@@ -416,7 +417,6 @@ const Sidebar = () => {
       <aside className="hidden lg:block w-64 bg-[#2366d1] text-white fixed h-full overflow-y-auto hide-scrollbar rounded-r-md z-30">
         <div className="flex flex-col justify-between min-h-full">
           <div className="flex-1">
-            {/* Logo section */}
             <div className="p-6 flex items-start justify-baseline h-32 flex-shrink-0">
               <Image
                 src={brandInfo.logo}
@@ -428,7 +428,6 @@ const Sidebar = () => {
               />
             </div>
 
-            {/* Main menu */}
             <nav className="mt-2 px-2">
               <div className="mb-4 px-2">
                 <p className="text-xs text-gray-300 uppercase tracking-wide font-semibold">
@@ -442,10 +441,8 @@ const Sidebar = () => {
                 ))}
               </ul>
 
-              {/* Divider */}
               <div className="border-t border-white/30 my-4 w-full"></div>
 
-              {/* ✅ NEW: Sub menu section title */}
               <div className="mb-4 px-2">
                 <p className="text-xs text-gray-300 uppercase tracking-wide font-semibold">
                   {user?.role === "admin_langganan"
@@ -454,7 +451,6 @@ const Sidebar = () => {
                 </p>
               </div>
 
-              {/* Sub menu */}
               <ul className="space-y-1">
                 {subMenuItems.map((item) => (
                   <li key={item.name}>{renderMenuItem(item)}</li>
@@ -463,7 +459,6 @@ const Sidebar = () => {
             </nav>
           </div>
 
-          {/* Bottom Sidebar */}
           <div className="flex-shrink-0 px-6 py-4 bg-[#2366d1]">
             {user?.role === "admin_langganan" ? (
               <div className="w-full h-24 flex items-center justify-center mb-4">
@@ -527,7 +522,6 @@ const Sidebar = () => {
         }`}
       >
         <div className="flex flex-col justify-between min-h-full">
-          {/* Mobile Header */}
           <div className="flex items-center justify-between p-4 border-b border-white/20 h-16">
             <div className="flex items-center space-x-3">
               <Image
@@ -563,7 +557,6 @@ const Sidebar = () => {
             </button>
           </div>
 
-          {/* Mobile Navigation */}
           <div className="flex-1 overflow-y-auto">
             <nav className="mt-4 px-2">
               <div className="mb-3 px-2">
@@ -596,7 +589,6 @@ const Sidebar = () => {
             </nav>
           </div>
 
-          {/* Mobile Footer */}
           <div className="flex-shrink-0 p-4 border-t border-white/20">
             <LogoutButton />
             <div className="flex items-center h-12 mt-2">

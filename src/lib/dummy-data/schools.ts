@@ -56,7 +56,7 @@ export const schools: School[] = [
     name: "SMA Negeri 5 Surabaya",
     address: "Jl. Kusuma Bangsa No.21",
     city: "Surabaya",
-    province: "Jawa Timur",
+    province: "Jawa Barat",
     postalCode: "60272",
     phone: "031-5341234",
     email: "support@sman5surabaya.sch.id",

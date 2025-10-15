@@ -90,6 +90,7 @@ export const users: User[] = [
   },
 
   // Students
+  // Siswa Kelas 12
   {
     id: "user-006",
     name: "Andi Siswa",
@@ -101,17 +102,7 @@ export const users: User[] = [
     lastLogin: "2024-07-28T11:00:00Z",
     avatar: "/assets/Avatar.png",
   },
-  {
-    id: "user-007",
-    name: "Sari Siswa",
-    email: "sari.siswa@sman5surabaya.sch.id",
-    password: "password123",
-    role: "student",
-    schoolId: "sch-003",
-    status: "pending",
-    lastLogin: "2024-07-25T11:00:00Z",
-    avatar: "/assets/Avatar.png",
-  },
+  // Siswa Kelas 11
   {
     id: "user-008",
     name: "Rian Siswa",
@@ -121,6 +112,18 @@ export const users: User[] = [
     schoolId: "sch-006",
     status: "active",
     lastLogin: "2024-07-28T12:00:00Z",
+    avatar: "/assets/Avatar.png",
+  },
+  // Siswa Kelas 10
+  {
+    id: "user-007",
+    name: "Sari Siswa",
+    email: "sari.siswa@sman5surabaya.sch.id",
+    password: "password123",
+    role: "student",
+    schoolId: "sch-003",
+    status: "active",
+    lastLogin: "2024-07-25T11:00:00Z",
     avatar: "/assets/Avatar.png",
   },
 ];
