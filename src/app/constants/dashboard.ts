@@ -98,6 +98,17 @@ export const COURSES: Course[] = [
     students: 1400,
     rating: 4.9,
   },
+  {
+    id: 9,
+    title: "Pancawaluya",
+    description: "Modul baru yang membahas Pancasila dan Wawasan Kebangsaan.",
+    slug: "pancawaluya",
+    image: "/assets/pancawaluya.png",
+    level: "Beginner",
+    duration: "6 minggu",
+    students: 500,
+    rating: 4.8,
+  },
 ];
 export const SCHEDULE_DAYS: ScheduleItem[] = [
   {

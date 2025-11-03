@@ -208,60 +208,63 @@ export default async function DetailMataPelajaranPage({ params }: PageProps) {
             </div>
           </div>
 
-          <div className="max-w-4xl">
-            <div className="bg-gradient-to-r from-white/5 to-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-lg flex items-center justify-center">
-                    <svg
-                      className="w-4 h-4 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2">
+              <CurriculumAccordion curriculum={curriculum} />
+            </div>
+            <div>
+              <div className="bg-gradient-to-r from-white/5 to-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-cyan-400 rounded-lg flex items-center justify-center">
+                      <svg
+                        className="w-4 h-4 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    </div>
+                    <span className="text-white font-semibold text-lg">
+                      Progress Pembelajaran
+                    </span>
                   </div>
-                  <span className="text-white font-semibold text-lg">
-                    Progress Pembelajaran
-                  </span>
-                </div>
-                <div className="text-right">
-                  <div className="text-2xl font-bold text-white">
-                    {completedLessons}/{totalLessons}
+                  <div className="text-right">
+                    <div className="text-2xl font-bold text-white">
+                      {completedLessons}/{totalLessons}
+                    </div>
+                    <div className="text-blue-200/70 text-sm">Pelajaran</div>
                   </div>
-                  <div className="text-blue-200/70 text-sm">Pelajaran</div>
                 </div>
-              </div>
 
-              <div className="relative">
-                <div className="w-full bg-white/10 rounded-full h-4 overflow-hidden shadow-inner">
-                  <div
-                    className="h-full bg-gradient-to-r from-blue-500 via-cyan-400 to-emerald-400 rounded-full transition-all duration-1000 ease-out relative"
-                    style={{ width: `${progress}%` }}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent rounded-full animate-pulse"></div>
+                <div className="relative">
+                  <div className="w-full bg-white/10 rounded-full h-4 overflow-hidden shadow-inner">
+                    <div
+                      className="h-full bg-gradient-to-r from-blue-500 via-cyan-400 to-emerald-400 rounded-full transition-all duration-1000 ease-out relative"
+                      style={{ width: `${progress}%` }}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent rounded-full animate-pulse"></div>
+                    </div>
                   </div>
-                </div>
-                <div className="flex justify-between mt-3">
-                  <span className="text-blue-200/70 text-sm font-medium">
-                    Mulai belajar
-                  </span>
-                  <span className="text-white font-bold text-sm">
-                    {Math.round(progress)}% Selesai
-                  </span>
+                  <div className="flex justify-between mt-3">
+                    <span className="text-blue-200/70 text-sm font-medium">
+                      Mulai belajar
+                    </span>
+                    <span className="text-white font-bold text-sm">
+                      {Math.round(progress)}% Selesai
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
-
-        <CurriculumAccordion curriculum={curriculum} />
       </div>
     </div>
   );

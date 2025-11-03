@@ -6,7 +6,7 @@ import { TryoutQuestion } from "../constants/tryoutdata";
 
 interface TryoutResultsProps {
   questions: TryoutQuestion[];
-  answers: { [key: number]: string | undefined };
+  answers: { [key: string]: string | undefined };
   onRestart: () => void;
   title: string;
 }

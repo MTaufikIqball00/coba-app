@@ -110,10 +110,13 @@ export default function MataPelajaranPage() {
                     course.slug && (
                       <div
                         key={course.id}
-                        className="w-full h-80 transform transition-all duration-200 hover:scale-105"
+                        className={`w-full h-80 transform transition-all duration-200 hover:scale-105 ${
+                          course.title === "Pancawaluya"
+                            ? "lg:col-span-2"
+                            : ""
+                        }`}
                       >
                         <div className="h-full flex flex-col">
-                          {" "}
                           <CourseCard course={course} priority={index < 4} />
                         </div>
                       </div>

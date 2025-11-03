@@ -11,11 +11,11 @@ export default function TryoutQuizPage() {
   const router = useRouter();
 
   const [isCompleted, setIsCompleted] = useState(false);
-  const [answers, setAnswers] = useState<{ [key: number]: string }>({});
+  const [answers, setAnswers] = useState<{ [key: string]: string }>({});
 
   const tryout = TRYOUT_DATA.find((t) => t.id === params.id);
 
-  const handleQuizComplete = (finalAnswers: any) => {
+  const handleQuizComplete = (finalAnswers: { [key: string]: string }) => {
     setAnswers(finalAnswers);
     setIsCompleted(true);
   };
