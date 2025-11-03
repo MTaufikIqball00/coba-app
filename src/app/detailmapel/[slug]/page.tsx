@@ -208,11 +208,8 @@ export default async function DetailMataPelajaranPage({ params }: PageProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
             <div className="lg:col-span-2">
-              <CurriculumAccordion curriculum={curriculum} />
-            </div>
-            <div>
               <div className="bg-gradient-to-r from-white/5 to-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
@@ -262,6 +259,9 @@ export default async function DetailMataPelajaranPage({ params }: PageProps) {
                   </div>
                 </div>
               </div>
+            </div>
+            <div className="lg:col-span-3">
+              <CurriculumAccordion curriculum={curriculum} />
             </div>
           </div>
         </div>
