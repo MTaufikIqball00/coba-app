@@ -11,7 +11,7 @@ export const COURSES: Course[] = [
   {
     id: 1,
     title: "Pancawaluya",
-    description: "Modul baru yang membahas Pancasila dan Wawasan Kebangsaan.",
+    description: "Panca Waluya adalah konsep pendidikan karakter yang berakar dari kearifan lokal Sunda. Secara harfiah, Panca Waluya berarti `Lima Kesempurnaan`. Kelima nilai tersebut adalah: Cageur (sehat jasmani dan rohani), Bageur (berperilaku baik), Bener (jujur dan benar), Pinter (cerdas dan pintar), dan Singer (gercep/tanggap dan gesit).",
     slug: "pancawaluya",
     image: "/assets/pancawaluya.png",
     level: "Beginner",
