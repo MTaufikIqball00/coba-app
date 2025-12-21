@@ -10,11 +10,13 @@ import { schools } from "../../../../lib/dummy-data/schools";
 // Helper to generate a unique ID for new users
 const generateNewId = () => `user-${Date.now()}`;
 
-const roleDisplayNames = {
+const roleDisplayNames: Record<string, string> = {
   admin_langganan: "Admin Langganan",
   school_admin: "Admin Sekolah",
   teacher: "Guru",
   student: "Siswa",
+  kepala_sekolah: "Kepala Sekolah",
+  admin_sekolah: "Admin Sekolah",
 };
 
 const statusStyles = {

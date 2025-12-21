@@ -52,6 +52,10 @@ export async function POST(req: NextRequest) {
       points,
       createdAt: new Date().toISOString(),
       dueDate,
+      className: "Unknown Class", // Default value
+      status: "Aktif",
+      submissions: 0,
+      totalStudents: 0,
     };
 
     assignments.set(id, newAssignment);

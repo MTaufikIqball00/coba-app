@@ -26,6 +26,8 @@ const sampleStudents: Student[] = [
     semester: 3,
     major: "Teknik Informatika",
     status: "active",
+    grade: 11, // Added
+    school: { name: "SMA Negeri 1 Jakarta", province: "DKI Jakarta" }, // Added
     gpa: 3.75,
     totalCredits: 144,
     completedCredits: 72,
@@ -50,6 +52,8 @@ const sampleStudents: Student[] = [
     major: "Teknik Informatika",
     enrollmentDate: "2024-08-15",
     status: "active",
+    grade: 11, // Added
+    school: { name: "SMA Negeri 1 Jakarta", province: "DKI Jakarta" }, // Added
     gpa: 3.92,
     totalCredits: 144,
     completedCredits: 75,
@@ -71,6 +75,8 @@ const sampleStudents: Student[] = [
     major: "Teknik Informatika",
     enrollmentDate: "2024-08-15",
     status: "active",
+    grade: 11, // Added
+    school: { name: "SMA Negeri 1 Jakarta", province: "DKI Jakarta" }, // Added
     gpa: 3.45,
     totalCredits: 144,
     completedCredits: 68,

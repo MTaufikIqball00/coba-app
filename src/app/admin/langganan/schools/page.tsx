@@ -150,7 +150,7 @@ const SchoolForm: React.FC<{
   onSave: (data: Omit<School, "id" | "registeredDate">) => void;
   onCancel: () => void;
 }> = ({ school, onSave, onCancel }) => {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<Omit<School, "id" | "registeredDate">>({
     name: school?.name || "",
     address: school?.address || "",
     city: school?.city || "",
@@ -160,6 +160,11 @@ const SchoolForm: React.FC<{
     email: school?.email || "",
     headmaster: school?.headmaster || "",
     subscriptionStatus: school?.subscriptionStatus || "none",
+    // Default values for missing properties
+    level: school?.level || "SMA",
+    academicYear: school?.academicYear || "2023/2024",
+    userCapacity: school?.userCapacity || 100,
+    logo: school?.logo || "",
   });
 
   const handleChange = (

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import { FiSave, FiArrowLeft, FiLoader } from 'react-icons/fi';
-import { Assignment } from '../../../../../api/tugas/store';
+import { Assignment } from '../../../../api/tugas/store';
 
 export default function EditAssignmentPage() {
   const router = useRouter();
@@ -150,7 +150,7 @@ export default function EditAssignmentPage() {
               type="date"
               name="dueDate"
               id="dueDate"
-              value={assignment.dueDate.split('T')[0]} // Format to YYYY-MM-DD
+              value={assignment.dueDate ? assignment.dueDate.split('T')[0] : ''} // Format to YYYY-MM-DD
               onChange={handleChange}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
               required

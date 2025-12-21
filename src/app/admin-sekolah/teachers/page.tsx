@@ -186,12 +186,18 @@ function TeacherFormModal({
   onSave: (formData: Omit<Teacher, "id" | "classes"> & { classes: string; status: "Active" | "Non-Active" }) => void;
   teacher: Teacher | null;
 }) {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string;
+    subject: string;
+    classes: string;
+    teachingHours: number;
+    status: "Active" | "Non-Active";
+  }>({
     name: teacher?.name || "",
     subject: teacher?.subject || "",
     classes: teacher?.classes.join(", ") || "",
     teachingHours: teacher?.teachingHours || 0,
-    status: teacher?.status || "Active",
+    status: (teacher?.status as "Active" | "Non-Active") || "Active",
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 

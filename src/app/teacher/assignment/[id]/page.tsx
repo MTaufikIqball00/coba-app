@@ -120,7 +120,7 @@ export default async function AssignmentDetailPage({
                     <FiCalendar className="h-6 w-6 text-red-600 mx-auto mb-2" />
                     <p className="text-sm text-red-600 font-medium">Deadline</p>
                     <p className="text-lg font-bold text-red-800">
-                        {new Date(assignment.dueDate).toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' })}
+                        {assignment.dueDate ? new Date(assignment.dueDate).toLocaleDateString("id-ID", { day: 'numeric', month: 'long', year: 'numeric' }) : 'Tidak ada'}
                     </p>
                 </div>
                 <div className="p-4 bg-gradient-to-r from-emerald-50/80 to-teal-50/80 rounded-xl border border-emerald-200/50">
@@ -165,7 +165,7 @@ export default async function AssignmentDetailPage({
               {submissions.map((submission) => (
                 <div key={submission.id} className="backdrop-blur-xl bg-white/50 border border-white/30 rounded-3xl shadow-2xl p-6">
                   <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-xl font-bold text-slate-800">{submission.studentName}</h3>
+                    <h3 className="text-xl font-bold text-slate-800">{submission.userName}</h3>
                     <span className="text-sm text-slate-500">
                       Dikumpulkan:{" "}
                       {new Date(submission.submittedAt).toLocaleString("id-ID")}
@@ -198,7 +198,7 @@ export default async function AssignmentDetailPage({
                         )}
                       </div>
                     ) : (
-                      <AssignmentGradeForm submissionId={submission.id} assignmentId={params.id} />
+                      <AssignmentGradeForm submissionId={submission.id} />
                     )}
                   </div>
                 </div>

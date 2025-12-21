@@ -3,6 +3,9 @@
 // In a real application, this would be replaced by a proper database like PostgreSQL, MongoDB, etc.
 
 // This is the unified Assignment interface based on what the frontend components expect.
+export type AssignmentType = "essay" | "quiz" | "project" | "presentation";
+export type AssignmentPriority = "High" | "Medium" | "Low";
+
 export interface Assignment {
   id: string;
   teacherId: string;
@@ -10,12 +13,14 @@ export interface Assignment {
   description: string;
   subject: string;
   className: string;
-  dueDate: string;
+  dueDate: string | undefined;
   createdAt: string;
   status: string; // "Aktif", "Selesai", "Telah Dinilai"
   submissions: number;
   totalStudents: number;
   priority: string; // "High", "Medium", "Low"
+  type?: AssignmentType;
+  points?: number;
 }
 
 export interface Submission {

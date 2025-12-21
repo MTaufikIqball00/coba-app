@@ -48,6 +48,9 @@ export default function TugasList() {
               subject: "Bahasa Indonesia",
               priority: "high",
               points: 100,
+              className: "12 IPA 1",
+              submissions: 0,
+              totalStudents: 30,
             },
             {
               id: "2",
@@ -64,6 +67,9 @@ export default function TugasList() {
               subject: "Matematika",
               priority: "medium",
               points: 50,
+              className: "12 IPA 2",
+              submissions: 5,
+              totalStudents: 32,
             },
             {
               id: "3",
@@ -80,6 +86,9 @@ export default function TugasList() {
               subject: "Sejarah",
               priority: "low",
               points: 75,
+              className: "11 IPS 1",
+              submissions: 28,
+              totalStudents: 28,
             },
           ];
           setAllTugas(mockData);

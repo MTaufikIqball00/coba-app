@@ -31,6 +31,10 @@ export interface Student {
   assignmentCompletion: number;
   quizAverage: number;
 
+  // Risk Analysis
+  riskStatus?: "Aman" | "Berisiko Sedang" | "Berisiko Tinggi";
+  riskScore?: number;
+
   createdAt: string;
   updatedAt: string;
 }

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "../../../../lib/auth/session";
 import { dummyStudents } from "../../../../lib/dummy-data";
+import { analyzeStudentRisk } from "../../../../lib/utils/risk-analysis";
 
 export async function GET(request: NextRequest) {
   const session = await getSession();
@@ -12,9 +13,13 @@ export async function GET(request: NextRequest) {
   // Convert Map values to an array
   const studentsArray = Array.from(dummyStudents.values());
 
+  // Perform Risk Analysis
+  const { students: enrichedStudents, stats } = analyzeStudentRisk(studentsArray);
+
   return NextResponse.json({
     success: true,
-    total: studentsArray.length,
-    students: studentsArray,
+    total: enrichedStudents.length,
+    students: enrichedStudents,
+    stats: stats,
   });
 }

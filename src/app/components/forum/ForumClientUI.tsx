@@ -15,7 +15,7 @@ type Room = {
   isActive?: boolean;
 };
 
-import { UserSession } from "@/app/types/attendance";
+import { UserSession } from "../../types/attendance";
 
 export default function ForumClientUI({ initialRooms, session }: { initialRooms: Room[]; session: UserSession | null }) {
   const [filter, setFilter] = useState<string>("all");

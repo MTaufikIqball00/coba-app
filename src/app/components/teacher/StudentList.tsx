@@ -10,6 +10,9 @@ import {
   FiClock,
   FiBarChart,
   FiStar,
+  FiAlertTriangle,
+  FiAlertCircle,
+  FiCheckCircle,
 } from "react-icons/fi";
 import { Student } from "../../../lib/types/student";
 
@@ -55,6 +58,37 @@ const getStatusBadge = (status: string) => {
   }
 };
 
+const getRiskBadge = (riskStatus?: string) => {
+  switch (riskStatus) {
+    case "Berisiko Tinggi":
+      return {
+        bg: "bg-red-100",
+        text: "text-red-700",
+        border: "border-red-200",
+        icon: <FiAlertCircle className="h-4 w-4 text-red-700" />,
+        label: "Bahaya",
+      };
+    case "Berisiko Sedang":
+      return {
+        bg: "bg-yellow-100",
+        text: "text-yellow-700",
+        border: "border-yellow-200",
+        icon: <FiAlertTriangle className="h-4 w-4 text-yellow-700" />,
+        label: "Peringatan",
+      };
+    case "Aman":
+      return {
+        bg: "bg-green-100",
+        text: "text-green-700",
+        border: "border-green-200",
+        icon: <FiCheckCircle className="h-4 w-4 text-green-700" />,
+        label: "Aman",
+      };
+    default:
+      return null;
+  }
+};
+
 interface StudentListProps {
   students: Student[];
 }
@@ -65,9 +99,7 @@ export default function StudentList({ students }: StudentListProps) {
       {students.map((student, index) => {
         const statusBadge = getStatusBadge(student.status);
         const subjectColor = getSubjectColor(student.major);
-        const assignmentCompletion = Math.round(
-          student.assignmentCompletion || 0
-        );
+        const riskBadge = getRiskBadge(student.riskStatus);
 
         return (
           <div
@@ -102,9 +134,19 @@ export default function StudentList({ students }: StudentListProps) {
                     </div>
 
                     <div className="flex-1">
-                      <h3 className="text-2xl font-bold text-slate-800 group-hover:text-cyan-800 transition-colors duration-300 mb-2">
-                        {student.name}
-                      </h3>
+                      <div className="flex justify-between items-start">
+                        <h3 className="text-2xl font-bold text-slate-800 group-hover:text-cyan-800 transition-colors duration-300 mb-2">
+                          {student.name}
+                        </h3>
+
+                        {riskBadge && (
+                           <div className={`flex items-center gap-2 px-3 py-1 ${riskBadge.bg} ${riskBadge.text} text-sm font-bold rounded-full border ${riskBadge.border} animate-pulse`}>
+                              {riskBadge.icon}
+                              <span>{riskBadge.label}</span>
+                           </div>
+                        )}
+                      </div>
+
                       <div className="flex flex-wrap gap-3 mb-4">
                         <div className="flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-slate-100/80 to-white/80 text-slate-700 text-sm font-semibold rounded-full border border-white/40">
                           <FiMail className="h-3 w-3" />
@@ -115,6 +157,13 @@ export default function StudentList({ students }: StudentListProps) {
                         >
                           {student.status}
                         </div>
+                        {/* Show Risk Score if available */}
+                        {student.riskScore !== undefined && (
+                             <div className="flex items-center gap-2 px-3 py-1 bg-purple-50 text-purple-700 text-sm font-semibold rounded-full border border-purple-200">
+                                <FiBarChart className="h-3 w-3" />
+                                Risk Score: {student.riskScore.toFixed(2)}
+                             </div>
+                        )}
                       </div>
 
                       <div className="flex items-center gap-2 mb-4">
@@ -127,14 +176,27 @@ export default function StudentList({ students }: StudentListProps) {
                           {student.class}
                         </span>
                       </div>
+
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                           <div className="bg-white/60 p-3 rounded-xl border border-white/50 text-center">
+                               <p className="text-xs text-gray-500 uppercase font-bold">GPA</p>
+                               <p className="text-lg font-bold text-slate-800">{student.gpa}</p>
+                           </div>
+                           <div className="bg-white/60 p-3 rounded-xl border border-white/50 text-center">
+                               <p className="text-xs text-gray-500 uppercase font-bold">Kehadiran</p>
+                               <p className="text-lg font-bold text-slate-800">{student.attendanceRate}%</p>
+                           </div>
+                           <div className="bg-white/60 p-3 rounded-xl border border-white/50 text-center">
+                               <p className="text-xs text-gray-500 uppercase font-bold">Kuis</p>
+                               <p className="text-lg font-bold text-slate-800">{student.quizAverage}</p>
+                           </div>
+                            <div className="bg-white/60 p-3 rounded-xl border border-white/50 text-center">
+                               <p className="text-xs text-gray-500 uppercase font-bold">Tugas</p>
+                               <p className="text-lg font-bold text-slate-800">{student.assignmentCompletion}%</p>
+                           </div>
+                      </div>
                     </div>
                   </div>
-
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                    {/* Stats */}
-                  </div>
-
-                  <div className="space-y-3">{/* Progress Bars */}</div>
                 </div>
 
                 <div className="flex flex-col gap-3 lg:flex-shrink-0 lg:w-48">

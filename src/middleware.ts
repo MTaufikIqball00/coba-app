@@ -120,7 +120,7 @@ export async function middleware(request: NextRequest) {
 
     // 3. Grade-based feature restriction for "Tryout" page
     if (pathname.startsWith("/tryout") && session.role === "student") {
-      if (![10, 11, 12].includes(session.grade)) {
+      if (session.grade !== undefined && ![10, 11, 12].includes(session.grade)) {
         return NextResponse.redirect(new URL("/dashboard", request.url));
       }
     }

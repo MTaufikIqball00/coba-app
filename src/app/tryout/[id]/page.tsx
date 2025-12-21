@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { TRYOUT_DATA } from "../../constants/tryoutdata";
 import Quiz from "../../components/Quiz";
 import TryoutResults from "../../components/TryoutResults";
+import { QuizResultss } from "../../types/quizdata";
 
 export default function TryoutQuizPage() {
   const params = useParams() as { id: string };
@@ -15,8 +16,22 @@ export default function TryoutQuizPage() {
 
   const tryout = TRYOUT_DATA.find((t) => t.id === params.id);
 
-  const handleQuizComplete = (finalAnswers: { [key: string]: string }) => {
-    setAnswers(finalAnswers);
+  const handleQuizComplete = (results: QuizResultss) => {
+    // Convert Array of answers to Map for TryoutResults if needed, or update TryoutResults to accept QuizResultss
+    // For now, assuming TryoutResults needs { [key: string]: string } map of questionId -> answer
+    // But QuizResultss returns an array of answers by index.
+
+    // Mapping array answers to question IDs if possible, or just using index as key
+    const answerMap: { [key: string]: string } = {};
+    results.answers.forEach((ans, idx) => {
+        if (ans) {
+            // Use question ID if available, else index
+            const qId = tryout?.questions[idx]?.id || String(idx);
+            answerMap[qId] = ans;
+        }
+    });
+
+    setAnswers(answerMap);
     setIsCompleted(true);
   };
 
