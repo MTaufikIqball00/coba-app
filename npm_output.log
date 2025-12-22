@@ -322,3 +322,49 @@ The width(-1) and height(-1) of chart should be greater than 0,
  ✓ Compiled in 1414ms (1432 modules)
  ✓ Compiled in 542ms (722 modules)
  ✓ Compiled in 449ms (537 modules)
+ ✓ Compiled in 12.8s (537 modules)
+ ✓ Compiled in 788ms (523 modules)
+ ✓ Compiled in 595ms (537 modules)
+ ✓ Compiled in 805ms (537 modules)
+ ✓ Compiled in 2.1s (1432 modules)
+ GET /login 200 in 999ms
+ GET /login 200 in 161ms
+ GET /login 200 in 192ms
+ GET /login 200 in 207ms
+ GET /login 200 in 208ms
+ ✓ Compiled in 1073ms (722 modules)
+ ○ Compiling /verification/teacher/student-detail ...
+ ⨯ ./src/app/(public-verification)/verification/teacher/student-detail/page.tsx:2:1
+Module not found: Can't resolve '../../../../../components/teacher/StudentDetail'
+  1 | "use client";
+> 2 | import StudentDetail from "../../../../../components/teacher/StudentDetail";
+    | ^
+  3 |
+  4 | // Mock Data
+  5 | const mockProfile = {
+
+https://nextjs.org/docs/messages/module-not-found
+ ⨯ ./src/app/(public-verification)/verification/teacher/student-detail/page.tsx:2:1
+Module not found: Can't resolve '../../../../../components/teacher/StudentDetail'
+  1 | "use client";
+> 2 | import StudentDetail from "../../../../../components/teacher/StudentDetail";
+    | ^
+  3 |
+  4 | // Mock Data
+  5 | const mockProfile = {
+
+https://nextjs.org/docs/messages/module-not-found
+ GET /verification/teacher/student-detail 500 in 1908ms
+ ✓ Compiled /_not-found in 2.9s (1743 modules)
+ ○ Compiling /verification/teacher/student-detail ...
+ ✓ Compiled /verification/teacher/student-detail in 3s (1208 modules)
+The width(-1) and height(-1) of chart should be greater than 0,
+       please check the style of container, or the props width(100%) and height(100%),
+       or add a minWidth(0) or minHeight(undefined) or use aspect(undefined) to control the
+       height and width.
+ GET /verification/teacher/student-detail 200 in 4042ms
+ GET /login 200 in 403ms
+ ✓ Compiled in 599ms (1019 modules)
+ ✓ Compiled in 1325ms (1432 modules)
+ ✓ Compiled in 580ms (722 modules)
+ ✓ Compiled in 545ms (537 modules)
