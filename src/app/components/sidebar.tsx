@@ -355,7 +355,7 @@ const Sidebar = () => {
   // ✅ FIX: Show loading state during hydration
   if (!mounted) {
     return (
-      <aside className="hidden lg:block w-64 bg-[#2366d1] text-white fixed h-full overflow-y-auto hide-scrollbar rounded-r-md z-30">
+      <aside className="hidden lg:block w-64 bg-brand-primary text-white fixed h-full overflow-y-auto hide-scrollbar rounded-r-md z-30">
         <div className="flex items-center justify-center h-full">
           <div className="animate-pulse text-white">Loading...</div>
         </div>
@@ -414,7 +414,7 @@ const Sidebar = () => {
       )}
 
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:block w-64 bg-[#2366d1] text-white fixed h-full overflow-y-auto hide-scrollbar rounded-r-md z-30">
+      <aside className="hidden lg:block w-64 bg-brand-primary text-white fixed h-full overflow-y-auto hide-scrollbar rounded-r-md z-30">
         <div className="flex flex-col justify-between min-h-full">
           <div className="flex-1">
             <div className="p-6 flex items-start justify-baseline h-32 flex-shrink-0">
@@ -459,7 +459,7 @@ const Sidebar = () => {
             </nav>
           </div>
 
-          <div className="flex-shrink-0 px-6 py-4 bg-[#2366d1]">
+          <div className="flex-shrink-0 px-6 py-4 bg-brand-primary">
             {user?.role === "admin_langganan" ? (
               <div className="w-full h-24 flex items-center justify-center mb-4">
                 <div className="text-4xl">👨‍💼</div>
@@ -517,7 +517,7 @@ const Sidebar = () => {
 
       {/* Mobile Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#2366d1] text-white shadow-xl transform transition-transform duration-300 ease-in-out lg:hidden ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-brand-primary text-white shadow-xl transform transition-transform duration-300 ease-in-out lg:hidden ${
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >

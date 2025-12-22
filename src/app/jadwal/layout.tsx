@@ -1,4 +1,5 @@
 import Sidebar from "../components/sidebar";
+import PageHeader from "../components/ui/PageHeader";
 
 export default function JadwalLayout({
   children,
@@ -13,7 +14,7 @@ export default function JadwalLayout({
       {/* Main Content */}
       <div className="flex-1 ml-60 flex flex-col">
         <header className="w-full bg-transparent my-1.5 px-6">
-          <div className="w-full rounded-md shadow-md bg-gradient-to-r from-[#2366d1] to-[#57a6ff] px-8 py-5 flex items-center justify-between">
+          <PageHeader>
             <a
               href="/"
               className="font-bold text-white text-2xl tracking-wide drop-shadow-sm hover:text-blue-100 transition-colors duration-200"
@@ -23,7 +24,7 @@ export default function JadwalLayout({
                 "Jabar Istimewa"
               </span>
             </a>
-          </div>
+          </PageHeader>
         </header>
 
         <main className="flex-grow px-6">{children}</main>
