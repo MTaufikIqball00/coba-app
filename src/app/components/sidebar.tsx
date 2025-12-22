@@ -356,8 +356,25 @@ const Sidebar = () => {
   if (!mounted) {
     return (
       <aside className="hidden lg:block w-64 bg-[#2366d1] text-white fixed h-full overflow-y-auto hide-scrollbar rounded-r-md z-30">
-        <div className="flex items-center justify-center h-full">
-          <div className="animate-pulse text-white">Loading...</div>
+         <div className="flex flex-col h-full animate-pulse">
+            <div className="p-6 h-32 flex items-center">
+              <div className="w-24 h-24 bg-white/20 rounded-full"></div>
+            </div>
+            <div className="px-4 space-y-3 mt-4">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="h-10 bg-white/10 rounded-full w-full"></div>
+              ))}
+            </div>
+             <div className="mt-auto p-6 space-y-4">
+                <div className="h-24 bg-white/10 rounded-lg w-full"></div>
+                <div className="flex items-center gap-3">
+                   <div className="w-12 h-12 bg-white/20 rounded-full"></div>
+                    <div className="flex-1 space-y-2">
+                       <div className="h-4 bg-white/20 rounded w-3/4"></div>
+                       <div className="h-3 bg-white/10 rounded w-1/2"></div>
+                    </div>
+                </div>
+            </div>
         </div>
       </aside>
     );
