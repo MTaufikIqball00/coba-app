@@ -355,7 +355,7 @@ const Sidebar = () => {
   // ✅ FIX: Show loading state during hydration
   if (!mounted) {
     return (
-      <aside className="hidden lg:block w-64 bg-brand-primary text-white fixed h-full overflow-y-auto hide-scrollbar rounded-r-md z-30">
+      <aside className="hidden lg:block w-64 bg-[#2366d1] text-white fixed h-full overflow-y-auto hide-scrollbar rounded-r-md z-30">
         <div className="flex items-center justify-center h-full">
           <div className="animate-pulse text-white">Loading...</div>
         </div>
