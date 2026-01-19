@@ -18,7 +18,6 @@
     "jose": "^6.1.0",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.544.0",
-    "ml-kmeans": "^7.0.0",
     "next": "^15.5.2",
     "qr-scanner": "1.4.2",
     "react": "19.1.0",

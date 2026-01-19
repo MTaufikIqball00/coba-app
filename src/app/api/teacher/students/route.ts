@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
   const studentsArray = Array.from(dummyStudents.values());
 
   // Perform Risk Analysis
-  const { students: enrichedStudents, stats } = analyzeStudentRisk(studentsArray);
+  const { students: enrichedStudents, stats } = await analyzeStudentRisk(studentsArray);
 
   return NextResponse.json({
     success: true,

@@ -13,7 +13,7 @@ export default async function TeacherDashboardPage() {
 
   // Calculate dynamic risk stats
   const studentsArray = Array.from(dummyStudents.values());
-  const { students } = analyzeStudentRisk(studentsArray);
+  const { students } = await analyzeStudentRisk(studentsArray);
   const atRiskCount = students.filter(
     (s) => s.riskStatus === "Berisiko Tinggi" || s.riskStatus === "Berisiko Sedang"
   ).length;
