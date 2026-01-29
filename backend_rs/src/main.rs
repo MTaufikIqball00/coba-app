@@ -41,6 +41,12 @@ async fn main() {
     let app = Router::new()
         .nest("/api", routes::auth::auth_routes())
         .nest("/api/teacher", routes::teacher::teacher_routes())
+        .nest("/api/courses", routes::course::course_routes())
+        .nest("/api/assignments", routes::assignment::assignment_routes())
+        .nest("/api/quizzes", routes::quiz::quiz_routes())
+        .nest("/api/attendance", routes::attendance::attendance_routes())
+        .nest("/api/grades", routes::grade::grade_routes())
+        .nest("/api/admin", routes::admin::admin_routes())
         .layer(TraceLayer::new_for_http())
         .layer(CorsLayer::permissive())
         .with_state(state);
