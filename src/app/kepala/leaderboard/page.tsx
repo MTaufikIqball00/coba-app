@@ -1,14 +1,14 @@
 "use client";
-import React from "react";
-import { dummyStudents } from "../../../lib/dummy-data/students";
+import React, { useState, useEffect } from "react";
 
-const getCombinedScore = (student: typeof dummyStudents[0]) => {
-  return student.averageScore * 0.6 + student.activityLevel * 0.4;
-};
-
-const sortedStudents = [...dummyStudents]
-  .sort((a, b) => getCombinedScore(b) - getCombinedScore(a))
-  .slice(0, 10); // Top 10 students
+interface StudentScore {
+  id: string;
+  name: string;
+  class: string;
+  averageScore: number;
+  activityLevel: number;
+  combinedScore: number;
+}
 
 const getBadge = (rank: number) => {
   if (rank === 1)
@@ -33,6 +33,23 @@ const getBadge = (rank: number) => {
 };
 
 export default function LeaderboardPage() {
+  const [students, setStudents] = useState<StudentScore[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchLeaderboard = async () => {
+      try {
+        const res = await fetch('/api/school-admin/leaderboard');
+        if (res.ok) setStudents(await res.json());
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchLeaderboard();
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white shadow-sm">
@@ -51,42 +68,48 @@ export default function LeaderboardPage() {
               Top 10 Murid Berprestasi
             </h2>
           </div>
-          <ul className="divide-y divide-gray-200">
-            {sortedStudents.map((student, index) => {
-              const rank = index + 1;
-              const score = getCombinedScore(student);
+          {loading ? (
+            <div className="p-10 text-center">Loading leaderboard...</div>
+          ) : (
+            <ul className="divide-y divide-gray-200">
+              {students.length === 0 ? (
+                <li className="p-6 text-center text-gray-500">Belum ada data.</li>
+              ) : students.map((student, index) => {
+                const rank = index + 1;
+                const score = student.combinedScore;
 
-              return (
-                <li
-                  key={student.id}
-                  className="p-4 sm:p-6 flex items-center justify-between hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex items-center">
-                    <div className="w-12 text-center">
-                      <span className="text-2xl font-bold text-gray-500">
-                        {rank}
-                      </span>
-                      <div className="mt-1">{getBadge(rank)}</div>
+                return (
+                  <li
+                    key={student.id}
+                    className="p-4 sm:p-6 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex items-center">
+                      <div className="w-12 text-center">
+                        <span className="text-2xl font-bold text-gray-500">
+                          {rank}
+                        </span>
+                        <div className="mt-1">{getBadge(rank)}</div>
+                      </div>
+                      <div className="ml-4">
+                        <p className="text-lg font-semibold text-gray-900">
+                          {student.name}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          Kelas: {student.class}
+                        </p>
+                      </div>
                     </div>
-                    <div className="ml-4">
-                      <p className="text-lg font-semibold text-gray-900">
-                        {student.name}
+                    <div className="text-right">
+                      <p className="text-xl font-bold text-blue-600">
+                        {score.toFixed(2)}
                       </p>
-                      <p className="text-sm text-gray-600">
-                        Kelas: {student.class}
-                      </p>
+                      <p className="text-xs text-gray-500">Skor Gabungan</p>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xl font-bold text-blue-600">
-                      {score.toFixed(2)}
-                    </p>
-                    <p className="text-xs text-gray-500">Skor Gabungan</p>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </div>
       </div>
     </div>

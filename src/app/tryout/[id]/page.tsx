@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { TRYOUT_DATA } from "../../constants/tryoutdata";
+
 import Quiz from "../../components/Quiz";
 import TryoutResults from "../../components/TryoutResults";
 import { QuizResultss } from "../../types/quizdata";
@@ -11,10 +11,31 @@ export default function TryoutQuizPage() {
   const params = useParams() as { id: string };
   const router = useRouter();
 
+  const [loading, setLoading] = useState(true);
+  const [tryout, setTryout] = useState<any>(null); // Using any temporarily to avoid deep type matching, or import Tryout type
   const [isCompleted, setIsCompleted] = useState(false);
   const [answers, setAnswers] = useState<{ [key: string]: string }>({});
 
-  const tryout = TRYOUT_DATA.find((t) => t.id === params.id);
+  useEffect(() => {
+    if (!params.id) return;
+
+    const fetchTryout = async () => {
+      try {
+        const res = await fetch(`/api/tryout/${params.id}`);
+        if (!res.ok) {
+          throw new Error("Failed to fetch");
+        }
+        const data = await res.json();
+        setTryout(data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTryout();
+  }, [params.id]);
 
   const handleQuizComplete = (results: QuizResultss) => {
     // Convert Array of answers to Map for TryoutResults if needed, or update TryoutResults to accept QuizResultss
@@ -24,11 +45,12 @@ export default function TryoutQuizPage() {
     // Mapping array answers to question IDs if possible, or just using index as key
     const answerMap: { [key: string]: string } = {};
     results.answers.forEach((ans, idx) => {
-        if (ans) {
-            // Use question ID if available, else index
-            const qId = tryout?.questions[idx]?.id || String(idx);
-            answerMap[qId] = ans;
-        }
+      if (ans) {
+        // Use question ID if available, else index
+        // With API data, questions should be present
+        const qId = tryout?.questions?.[idx]?.id ? String(tryout.questions[idx].id) : String(idx);
+        answerMap[qId] = ans;
+      }
     });
 
     setAnswers(answerMap);
@@ -39,6 +61,14 @@ export default function TryoutQuizPage() {
     setAnswers({});
     setIsCompleted(false);
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 text-white">
+        Loading...
+      </div>
+    );
+  }
 
   if (!tryout) {
     return (
@@ -71,7 +101,7 @@ export default function TryoutQuizPage() {
 
   return (
     <Quiz
-      questions={tryout.questions.map((q) => ({ ...q, id: String(q.id) }))}
+      questions={tryout.questions.map((q: any) => ({ ...q, id: String(q.id) }))}
       title={tryout.title}
       onComplete={handleQuizComplete}
     />

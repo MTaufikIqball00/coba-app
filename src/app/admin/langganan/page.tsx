@@ -1,11 +1,9 @@
 "use client";
-import React, { useState } from "react";
-import { dummyUsers } from "../../../lib/dummy-data";
+import React, { useState, useEffect } from "react";
 import {
   FiUsers,
   FiHome,
   FiActivity,
-  FiAlertCircle,
   FiCheckCircle,
   FiServer,
   FiDatabase,
@@ -19,11 +17,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  LineChart,
-  Line
 } from "recharts";
 
 type School = {
@@ -31,22 +24,6 @@ type School = {
   province: string;
   subscriptionStatus: string;
 };
-
-// --- Mock Data Generators ---
-
-function getSchools(): School[] {
-  const schoolsMap = new Map<string, School>();
-  dummyUsers.forEach((user) => {
-    if (user.school && !schoolsMap.has(user.school.name)) {
-      schoolsMap.set(user.school.name, {
-        name: user.school.name,
-        province: user.school.province,
-        subscriptionStatus: (user.school as any).subscriptionStatus || "unknown",
-      });
-    }
-  });
-  return Array.from(schoolsMap.values());
-}
 
 const mockActivityLogs = [
   { id: 1, user: "Admin Pusat", action: "Updated subscription", target: "SMA 1 Bandung", time: "10 mins ago", type: "info" },
@@ -71,8 +48,6 @@ const mockSystemStatus = [
   { name: 'CDN', status: 'Degraded', uptime: '98.5%', icon: FiGlobe, color: 'text-amber-500', bg: 'bg-amber-100' },
 ];
 
-const COLORS = ['#0ea5e9', '#10b981', '#f59e0b', '#f43f5e'];
-
 // --- Components ---
 
 const StatCard = ({ title, value, icon: Icon, color, subtext }: any) => (
@@ -84,7 +59,7 @@ const StatCard = ({ title, value, icon: Icon, color, subtext }: any) => (
         {subtext && <p className="text-xs text-slate-400 mt-1">{subtext}</p>}
       </div>
       <div className={`p-3 rounded-xl bg-slate-50 ${color.replace('text-', 'text-opacity-20 ')}`}>
-         <Icon className={`w-6 h-6 ${color}`} />
+        <Icon className={`w-6 h-6 ${color}`} />
       </div>
     </div>
   </div>
@@ -92,10 +67,9 @@ const StatCard = ({ title, value, icon: Icon, color, subtext }: any) => (
 
 const ActivityItem = ({ log }: { log: any }) => (
   <div className="flex items-start gap-3 py-3 border-b border-slate-50 last:border-0">
-    <div className={`w-2 h-2 mt-2 rounded-full ${
-      log.type === 'success' ? 'bg-emerald-500' :
-      log.type === 'warning' ? 'bg-amber-500' : 'bg-blue-500'
-    }`} />
+    <div className={`w-2 h-2 mt-2 rounded-full ${log.type === 'success' ? 'bg-emerald-500' :
+        log.type === 'warning' ? 'bg-amber-500' : 'bg-blue-500'
+      }`} />
     <div className="flex-1">
       <p className="text-sm font-medium text-slate-800">
         {log.user} <span className="font-normal text-slate-500">{log.action}</span>
@@ -122,9 +96,8 @@ const SystemStatusWidget = () => (
               <p className="text-xs text-slate-500">Uptime: {item.uptime}</p>
             </div>
           </div>
-          <span className={`text-xs font-semibold px-2 py-1 rounded-full ${
-            item.status === 'Operational' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
-          }`}>
+          <span className={`text-xs font-semibold px-2 py-1 rounded-full ${item.status === 'Operational' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+            }`}>
             {item.status}
           </span>
         </div>
@@ -134,16 +107,27 @@ const SystemStatusWidget = () => (
 );
 
 export default function AdminLanggananPage() {
-  const schools = getSchools();
+  const [stats, setStats] = useState({
+    totalSchools: 0,
+    totalStudents: 0,
+    totalTeachers: 0,
+    activeSubs: 0,
+    recentSchools: [] as School[]
+  });
+  const [loading, setLoading] = useState(true);
 
-  // Simulated Global Stats (since we only have dummy data for a few users)
-  // In a real app, these would come from an API aggregation
-  const globalStats = {
-    totalSchools: schools.length,
-    totalStudents: 12543, // Mocked for "Senior Product Engineer" demo
-    totalTeachers: 842,   // Mocked
-    activeSubs: schools.filter((s) => s.subscriptionStatus === "active").length,
-  };
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await fetch('/api/admin/dashboard');
+        if (res.ok) setStats(await res.json());
+      } catch (e) { console.error(e); }
+      finally { setLoading(false); }
+    };
+    fetchStats();
+  }, []);
+
+  if (loading) return <div className="p-10 text-center">Loading dashboard...</div>;
 
   return (
     <div className="min-h-screen bg-slate-50/50">
@@ -174,28 +158,28 @@ export default function AdminLanggananPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <StatCard
             title="Total Schools"
-            value={globalStats.totalSchools}
+            value={stats.totalSchools}
             icon={FiHome}
             color="text-blue-600"
             subtext="+2 this month"
           />
           <StatCard
             title="Active Subscriptions"
-            value={globalStats.activeSubs}
+            value={stats.activeSubs}
             icon={FiCheckCircle}
             color="text-emerald-600"
             subtext="92% Retention Rate"
           />
           <StatCard
             title="Total Students"
-            value={globalStats.totalStudents.toLocaleString()}
+            value={stats.totalStudents.toLocaleString()}
             icon={FiUsers}
             color="text-violet-600"
             subtext="Across all schools"
           />
           <StatCard
             title="Total Teachers"
-            value={globalStats.totalTeachers.toLocaleString()}
+            value={stats.totalTeachers.toLocaleString()}
             icon={FiUsers}
             color="text-indigo-600"
             subtext="Avg 15:1 Student Ratio"
@@ -218,8 +202,8 @@ export default function AdminLanggananPage() {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={mockGrowthData}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#64748b'}} />
-                  <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b'}} />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#64748b' }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#64748b' }} />
                   <Tooltip
                     contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                   />
@@ -268,20 +252,22 @@ export default function AdminLanggananPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
-                  {schools.slice(0, 5).map((school, i) => (
-                    <tr key={i} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-4 py-3 font-medium text-slate-800">{school.name}</td>
-                      <td className="px-4 py-3 text-slate-500">{school.province}</td>
-                      <td className="px-4 py-3">
-                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                          school.subscriptionStatus === 'active' ? 'bg-emerald-100 text-emerald-700' :
-                          school.subscriptionStatus === 'limited' ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'
-                        }`}>
-                          {school.subscriptionStatus}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
+                  {stats.recentSchools.length === 0 ? (
+                    <tr><td colSpan={3} className="px-4 py-3 text-center">No schools found</td></tr>
+                  ) : (
+                    stats.recentSchools.map((school, i) => (
+                      <tr key={i} className="hover:bg-slate-50 transition-colors">
+                        <td className="px-4 py-3 font-medium text-slate-800">{school.name}</td>
+                        <td className="px-4 py-3 text-slate-500">{school.province}</td>
+                        <td className="px-4 py-3">
+                          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${school.subscriptionStatus === 'active' ? 'bg-emerald-100 text-emerald-700' :
+                              school.subscriptionStatus === 'limited' ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'
+                            }`}>
+                            {school.subscriptionStatus}
+                          </span>
+                        </td>
+                      </tr>
+                    )))}
                 </tbody>
               </table>
             </div>

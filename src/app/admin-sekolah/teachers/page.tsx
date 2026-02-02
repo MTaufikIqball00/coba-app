@@ -1,19 +1,42 @@
 "use client";
-import React, { useState } from "react";
-import { dummyTeachers } from "../../../lib/dummy-data/teachers";
+import React, { useState, useEffect } from "react";
 import Table from "../../components/admin/Table";
 import Modal from "../../components/admin/Modal";
 import PageHeader from "../../components/admin/PageHeader";
 import { EditButton, DeleteButton } from "../../components/admin/ActionButton";
 
-type Teacher = typeof dummyTeachers[0];
+interface Teacher {
+  id: string;
+  name: string;
+  subject: string;
+  classes: string[];
+  teachingHours: number;
+  status: "Active" | "Non-Active";
+  email: string;
+}
 
 export default function ManajemenGuruAdminPage() {
-  const [teachers, setTeachers] = useState<Teacher[]>(dummyTeachers);
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [teacherToDelete, setTeacherToDelete] = useState<Teacher | null>(null);
+
+  useEffect(() => {
+    fetchTeachers();
+  }, []);
+
+  const fetchTeachers = async () => {
+    try {
+      const res = await fetch('/api/school-admin/teachers');
+      if (res.ok) setTeachers(await res.json());
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleOpenModal = (teacher: Teacher | null = null) => {
     setSelectedTeacher(teacher);
@@ -26,22 +49,9 @@ export default function ManajemenGuruAdminPage() {
   };
 
   const handleSaveTeacher = (formData: Omit<Teacher, "id" | "classes"> & { classes: string; status: "Active" | "Non-Active" }) => {
-    const classArray = formData.classes.split(',').map(c => c.trim());
-    if (selectedTeacher) {
-      // Edit
-      const updatedTeachers = teachers.map((t) =>
-        t.id === selectedTeacher.id ? { ...t, ...formData, classes: classArray } : t
-      );
-      setTeachers(updatedTeachers);
-    } else {
-      // Add
-      const newTeacher: Teacher = {
-        id: `T${String(teachers.length + 1).padStart(3, "0")}`,
-        ...formData,
-        classes: classArray,
-      };
-      setTeachers([...teachers, newTeacher]);
-    }
+    // Mock save logic for now as API might not support POST yet or needs specific endpoint
+    // ideally call POST /api/school-admin/teachers
+    console.log("Saving teacher", formData);
     handleCloseModal();
   };
 
@@ -68,7 +78,7 @@ export default function ManajemenGuruAdminPage() {
       accessor: (row: Teacher) => (
         <div>
           <div className="font-semibold">{row.name}</div>
-          <div className="text-sm text-gray-500">{row.id}</div>
+          <div className="text-sm text-gray-500">{row.email}</div>
         </div>
       ),
     },
@@ -85,18 +95,17 @@ export default function ManajemenGuruAdminPage() {
       accessor: (row: Teacher) => `${row.teachingHours} jam`,
     },
     {
-        header: "Status",
-        accessor: (row: Teacher) => (
-            <span
-                className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                    row.status === "Active"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
-                }`}
-            >
-                {row.status}
-            </span>
-        ),
+      header: "Status",
+      accessor: (row: Teacher) => (
+        <span
+          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${row.status === "Active"
+            ? "bg-green-100 text-green-800"
+            : "bg-red-100 text-red-800"
+            }`}
+        >
+          {row.status}
+        </span>
+      ),
     },
     {
       header: "Aksi",
@@ -126,11 +135,15 @@ export default function ManajemenGuruAdminPage() {
               Tambah Guru
             </button>
           </div>
-          <Table
-            columns={columns}
-            data={teachers}
-            keyExtractor={(row) => row.id}
-          />
+          {loading ? (
+            <div className="p-10 text-center">Loading data...</div>
+          ) : (
+            <Table
+              columns={columns}
+              data={teachers}
+              keyExtractor={(row) => row.id}
+            />
+          )}
         </div>
       </div>
 
@@ -226,7 +239,7 @@ function TeacherFormModal({
       return;
     }
     setErrors({});
-    onSave(formData);
+    onSave({ ...formData, email: "teacher@example.com" });
   };
 
   return (

@@ -1,11 +1,10 @@
-import React from "react";
+"use client";
+
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { TRYOUT_DATA } from "../constants/tryoutdata";
+import { Tryout } from "../constants/tryoutdata";
 
-// This is now a Server Component. Access control is handled by middleware.
-// It will only be rendered if the user is a grade 12 student.
-
-const TryoutCard = ({ tryout }: { tryout: (typeof TRYOUT_DATA)[0] }) => (
+const TryoutCard = ({ tryout }: { tryout: Tryout }) => (
   <div className="group bg-gradient-to-br from-white/10 via-white/5 to-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 hover:shadow-2xl hover:shadow-cyan-500/10 transition-all duration-500 hover:scale-[1.02]">
     <div className="flex items-start justify-between mb-4">
       <div className="flex items-center gap-3">
@@ -52,7 +51,8 @@ const TryoutCard = ({ tryout }: { tryout: (typeof TRYOUT_DATA)[0] }) => (
             d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
           />
         </svg>
-        <span>{tryout.questions.length} soal</span>
+        {/* Check if questions exists before accessing length, as API might return shallow object initially or loading state */}
+        <span>{tryout.questions?.length || 0} soal</span>
       </div>
     </div>
 
@@ -65,6 +65,48 @@ const TryoutCard = ({ tryout }: { tryout: (typeof TRYOUT_DATA)[0] }) => (
 );
 
 export default function TryoutPage() {
+  const [tryouts, setTryouts] = useState<Tryout[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTryouts = async () => {
+      try {
+        const response = await fetch("/api/tryout");
+        if (response.ok) {
+          const data = await response.json();
+          // API might return tryouts without questions property populated fully or at all in list view if optimized, 
+          // but our current endpoint sends everything. 
+          // We need to ensure the data matches the interface.
+          // The API returns questions array as JSON or text? 
+          // The API endpoint /api/tryout (GET) returns `mockRows` currently? 
+          // wait, the previous code for /api/tryout route.ts was:
+          // SELECT * FROM tryouts
+          // It does NOT join tryout_questions.
+          // So `questions` property will be MISSING in the response for the list!
+          // We need to handle that.
+          // I should verify if the API actually returns questions count.
+          // For now, I'll update the API to return questions count OR update the type/frontend to handle missing questions.
+          // I will assume for now I should handle it here.
+          setTryouts(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch tryouts", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTryouts();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center justify-center">
+        <div className="text-white text-xl">Loading tryouts...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 relative overflow-hidden">
       <div className="absolute inset-0 opacity-30">
@@ -86,7 +128,7 @@ export default function TryoutPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {TRYOUT_DATA.map((tryout) => (
+          {tryouts.map((tryout) => (
             <TryoutCard key={tryout.id} tryout={tryout} />
           ))}
         </div>

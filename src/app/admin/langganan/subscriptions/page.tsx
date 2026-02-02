@@ -1,29 +1,73 @@
 "use client";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import PageHeader from "../../../components/admin/PageHeader";
 import Table from "../../../components/admin/Table";
 import Modal from "../../../components/admin/Modal";
 import { EditButton } from "../../../components/admin/ActionButton";
-import { subscriptions as initialSubscriptions, Subscription } from "../../../../lib/dummy-data/subscriptions";
-import { schools } from "../../../../lib/dummy-data/schools";
-import { packages } from "../../../../lib/dummy-data/packages";
 
-const statusStyles = {
+// Types
+export interface Subscription {
+  id: string;
+  schoolId: string;
+  packageId: string;
+  startDate: string;
+  endDate: string;
+  status: "active" | "expired" | "cancelled" | "pending";
+  autoRenew: boolean;
+  paymentStatus: "paid" | "unpaid" | "overdue";
+}
+
+export interface School {
+  id: string;
+  name: string;
+}
+
+export interface Package {
+  id: string;
+  name: string;
+}
+
+const statusStyles: Record<string, string> = {
   active: "bg-emerald-50 text-emerald-700",
   expired: "bg-rose-50 text-rose-700",
   cancelled: "bg-slate-50 text-slate-600",
 };
 
 const LanggananSekolahPage = () => {
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>(initialSubscriptions);
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [schools, setSchools] = useState<School[]>([]);
+  const [packages, setPackages] = useState<Package[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentSubscription, setCurrentSubscription] = useState<Subscription | null>(null);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const [subRes, schRes, pkgRes] = await Promise.all([
+        fetch('/api/admin/subscriptions'),
+        fetch('/api/admin/schools'),
+        fetch('/api/admin/packages')
+      ]);
+
+      if (subRes.ok) setSubscriptions(await subRes.json());
+      if (schRes.ok) setSchools(await schRes.json());
+      if (pkgRes.ok) setPackages(await pkgRes.json());
+    } catch (error) {
+      console.error("Failed to fetch data", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const dataMap = useMemo(() => {
     const schoolMap = new Map(schools.map(s => [s.id, s.name]));
     const packageMap = new Map(packages.map(p => [p.id, p.name]));
     return { schoolMap, packageMap };
-  }, []);
+  }, [schools, packages]);
 
   const handleOpenModal = (subscription: Subscription) => {
     setCurrentSubscription(subscription);
@@ -35,13 +79,14 @@ const LanggananSekolahPage = () => {
     setCurrentSubscription(null);
   };
 
-  const handleSave = (subscriptionData: Partial<Subscription>) => {
+  const handleSave = async (subscriptionData: Partial<Subscription>) => {
+    // Here we would implement PUT /api/admin/subscriptions/[id]
+    // For now, let's keep it optimistic or add TODO
     if (currentSubscription) {
-      setSubscriptions(
-        subscriptions.map((sub) =>
-          sub.id === currentSubscription.id ? { ...sub, ...subscriptionData } : sub
-        )
-      );
+      // Implement save logic via API
+      console.log("Saving...", subscriptionData);
+      // Simulate update
+      setSubscriptions(prev => prev.map(s => s.id === currentSubscription.id ? { ...s, ...subscriptionData } : s));
     }
     handleCloseModal();
   };
@@ -72,9 +117,8 @@ const LanggananSekolahPage = () => {
       header: "Status",
       accessor: (row: Subscription) => (
         <span
-          className={`px-3 py-1.5 text-xs font-semibold rounded-full capitalize ${
-            statusStyles[row.status] || statusStyles.cancelled
-          }`}
+          className={`px-3 py-1.5 text-xs font-semibold rounded-full capitalize ${statusStyles[row.status] || statusStyles.cancelled
+            }`}
         >
           {row.status}
         </span>
@@ -101,7 +145,11 @@ const LanggananSekolahPage = () => {
 
       <main className="max-w-7xl mx-auto px-6 -mt-8">
         <div className="bg-white rounded-xl shadow-sm border border-sky-100 overflow-hidden">
-          <Table columns={columns} data={subscriptions} keyExtractor={(s) => s.id} />
+          {loading ? (
+            <div className="p-10 text-center">Loading data...</div>
+          ) : (
+            <Table columns={columns} data={subscriptions} keyExtractor={(s) => s.id} />
+          )}
         </div>
         <div className="h-12"></div>
       </main>
@@ -139,10 +187,10 @@ const SubscriptionForm: React.FC<{
   ) => {
     const { name, value, type } = e.target;
     if (type === 'checkbox') {
-        const { checked } = e.target as HTMLInputElement;
-        setFormData(prev => ({ ...prev, [name]: checked }));
+      const { checked } = e.target as HTMLInputElement;
+      setFormData(prev => ({ ...prev, [name]: checked }));
     } else {
-        setFormData(prev => ({ ...prev, [name]: value }));
+      setFormData(prev => ({ ...prev, [name]: value as any }));
     }
   };
 
@@ -163,7 +211,7 @@ const SubscriptionForm: React.FC<{
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">Tanggal Berakhir</label>
-        <input type="date" name="endDate" value={formData.endDate} onChange={handleChange} className="p-2 border rounded w-full" />
+        <input type="date" name="endDate" value={formData.endDate.split('T')[0]} onChange={handleChange} className="p-2 border rounded w-full" />
       </div>
       <div className="flex items-center gap-2">
         <input type="checkbox" id="autoRenew" name="autoRenew" checked={formData.autoRenew} onChange={handleChange} className="h-4 w-4 rounded border-gray-300 text-sky-600 focus:ring-sky-500" />

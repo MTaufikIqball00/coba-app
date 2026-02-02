@@ -1,19 +1,47 @@
 "use client";
-import React, { useState } from "react";
-import { dummyStudents } from "../../../lib/dummy-data/students";
+import React, { useState, useEffect } from "react";
 import Table from "../../components/admin/Table";
 import Modal from "../../components/admin/Modal";
 import PageHeader from "../../components/admin/PageHeader";
 import { EditButton, DeleteButton } from "../../components/admin/ActionButton";
 
-type Student = typeof dummyStudents[0];
+interface Student {
+  id: string;
+  name: string;
+  class: string;
+  status: "active" | "inactive";
+  averageScore: number;
+  activityLevel: number;
+  profile: {
+    nisn: string;
+    gender: "Laki-laki" | "Perempuan";
+    dateOfBirth: string;
+    address: string;
+  };
+}
 
 export default function ManajemenMuridAdminPage() {
-  const [students, setStudents] = useState<Student[]>(dummyStudents);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [studentToDelete, setStudentToDelete] = useState<Student | null>(null);
+
+  useEffect(() => {
+    fetchStudents();
+  }, []);
+
+  const fetchStudents = async () => {
+    try {
+      const res = await fetch('/api/school-admin/students');
+      if (res.ok) setStudents(await res.json());
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleOpenModal = (student: Student | null = null) => {
     setSelectedStudent(student);
@@ -26,20 +54,7 @@ export default function ManajemenMuridAdminPage() {
   };
 
   const handleSaveStudent = (formData: Omit<Student, "id">) => {
-    if (selectedStudent) {
-      // Edit
-      const updatedStudents = students.map((s) =>
-        s.id === selectedStudent.id ? { ...s, ...formData } : s
-      );
-      setStudents(updatedStudents);
-    } else {
-      // Add
-      const newStudent: Student = {
-        id: `S${String(students.length + 1).padStart(3, "0")}`,
-        ...formData,
-      };
-      setStudents([...students, newStudent]);
-    }
+    console.log("Saving student", formData);
     handleCloseModal();
   };
 
@@ -78,11 +93,10 @@ export default function ManajemenMuridAdminPage() {
       header: "Status",
       accessor: (row: Student) => (
         <span
-          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-            row.status === "active"
+          className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${row.status === "active"
               ? "bg-green-100 text-green-800"
               : "bg-red-100 text-red-800"
-          }`}
+            }`}
         >
           {row.status === "active" ? "Aktif" : "Tidak Aktif"}
         </span>
@@ -116,11 +130,15 @@ export default function ManajemenMuridAdminPage() {
               Tambah Murid
             </button>
           </div>
-          <Table
-            columns={columns}
-            data={students}
-            keyExtractor={(row) => row.id}
-          />
+          {loading ? (
+            <div className="p-10 text-center">Loading data...</div>
+          ) : (
+            <Table
+              columns={columns}
+              data={students}
+              keyExtractor={(row) => row.id}
+            />
+          )}
         </div>
       </div>
 
@@ -215,7 +233,7 @@ function StudentFormModal({
       return;
     }
     setErrors({});
-    onSave(formData as Omit<Student, "id">);
+    onSave(formData as any);
   };
 
   return (
@@ -226,24 +244,24 @@ function StudentFormModal({
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-            <input type="text" name="name" value={formData.name} onChange={handleChange} placeholder="Nama Lengkap" required className={`w-full border p-2 rounded-md ${errors.name ? 'border-red-500' : 'border-gray-300'}`}/>
-            {errors.name && <p className="text-xs text-red-600 mt-1">{errors.name}</p>}
+          <input type="text" name="name" value={formData.name} onChange={handleChange} placeholder="Nama Lengkap" required className={`w-full border p-2 rounded-md ${errors.name ? 'border-red-500' : 'border-gray-300'}`} />
+          {errors.name && <p className="text-xs text-red-600 mt-1">{errors.name}</p>}
         </div>
         <div>
-            <input type="text" name="nisn" value={formData.profile.nisn} onChange={handleChange} placeholder="NISN" required className={`w-full border p-2 rounded-md ${errors.nisn ? 'border-red-500' : 'border-gray-300'}`}/>
-            {errors.nisn && <p className="text-xs text-red-600 mt-1">{errors.nisn}</p>}
+          <input type="text" name="nisn" value={formData.profile.nisn} onChange={handleChange} placeholder="NISN" required className={`w-full border p-2 rounded-md ${errors.nisn ? 'border-red-500' : 'border-gray-300'}`} />
+          {errors.nisn && <p className="text-xs text-red-600 mt-1">{errors.nisn}</p>}
         </div>
-        <input type="text" name="class" value={formData.class} onChange={handleChange} placeholder="Kelas" className="w-full border p-2 rounded-md"/>
+        <input type="text" name="class" value={formData.class} onChange={handleChange} placeholder="Kelas" className="w-full border p-2 rounded-md" />
         <select name="status" value={formData.status} onChange={handleChange} className="w-full border p-2 rounded-md">
           <option value="active">Aktif</option>
           <option value="inactive">Tidak Aktif</option>
         </select>
-        <input type="date" name="dateOfBirth" value={formData.profile.dateOfBirth} onChange={handleChange} className="w-full border p-2 rounded-md"/>
+        <input type="date" name="dateOfBirth" value={formData.profile.dateOfBirth} onChange={handleChange} className="w-full border p-2 rounded-md" />
         <select name="gender" value={formData.profile.gender} onChange={handleChange} className="w-full border p-2 rounded-md">
-            <option value="Laki-laki">Laki-laki</option>
-            <option value="Perempuan">Perempuan</option>
+          <option value="Laki-laki">Laki-laki</option>
+          <option value="Perempuan">Perempuan</option>
         </select>
-        <input type="text" name="address" value={formData.profile.address} onChange={handleChange} placeholder="Alamat" className="w-full border p-2 rounded-md"/>
+        <input type="text" name="address" value={formData.profile.address} onChange={handleChange} placeholder="Alamat" className="w-full border p-2 rounded-md" />
         <div className="mt-6 flex justify-end gap-3">
           <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-200 rounded-lg">Batal</button>
           <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg">Simpan</button>

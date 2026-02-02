@@ -1,24 +1,42 @@
 "use client";
-import React, { useState, useMemo } from "react";
-import { users as dummyUsers, User } from "../../../lib/dummy-data/users";
+import React, { useState, useEffect } from "react";
 import Table from "../../components/admin/Table";
 import Modal from "../../components/admin/Modal";
 import PageHeader from "../../components/admin/PageHeader";
 import { EditButton, DeleteButton } from "../../components/admin/ActionButton";
 
-type Headmaster = User & { role: "kepala_sekolah" };
+interface Headmaster {
+  id: string;
+  name: string;
+  email: string;
+  role: "kepala_sekolah";
+  status: "active" | "inactive";
+  lastLogin?: string;
+  schoolId?: string;
+}
 
 export default function ManajemenKepalaSekolahPage() {
-  const [users, setUsers] = useState<User[]>(dummyUsers);
+  const [headmasters, setHeadmasters] = useState<Headmaster[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedHeadmaster, setSelectedHeadmaster] = useState<Headmaster | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [headmasterToDelete, setHeadmasterToDelete] = useState<Headmaster | null>(null);
 
-  const headmasters = useMemo(
-    () => users.filter((user): user is Headmaster => user.role === "kepala_sekolah"),
-    [users]
-  );
+  useEffect(() => {
+    fetchHeadmasters();
+  }, []);
+
+  const fetchHeadmasters = async () => {
+    try {
+      const res = await fetch('/api/school-admin/headmaster');
+      if (res.ok) setHeadmasters(await res.json());
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleOpenModal = (headmaster: Headmaster | null = null) => {
     setSelectedHeadmaster(headmaster);
@@ -30,24 +48,22 @@ export default function ManajemenKepalaSekolahPage() {
     setIsModalOpen(false);
   };
 
-  const handleSaveHeadmaster = (formData: Omit<Headmaster, "id" | "role" | "password" | "lastLogin" | "avatar">) => {
-    if (selectedHeadmaster) {
-      // Edit
-      const updatedUsers = users.map((u) =>
-        u.id === selectedHeadmaster.id ? { ...u, ...formData } : u
-      );
-      setUsers(updatedUsers);
-    } else {
-      // Add
-      const newHeadmaster: User = {
-        id: `user-${String(users.length + 1).padStart(3, "0")}`,
-        ...formData,
-        role: "kepala_sekolah",
-        password: "password123", // Default password
-        lastLogin: new Date().toISOString(),
-        avatar: "/assets/Avatar.png",
-      };
-      setUsers([...users, newHeadmaster]);
+  const handleSaveHeadmaster = async (formData: any) => {
+    try {
+      if (selectedHeadmaster) {
+        // Mock update logic or API implementation needed
+        console.log("Updating", formData);
+      } else {
+        // Create
+        const res = await fetch('/api/school-admin/headmaster', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+        if (res.ok) fetchHeadmasters();
+      }
+    } catch (e) {
+      console.error(e);
     }
     handleCloseModal();
   };
@@ -64,7 +80,7 @@ export default function ManajemenKepalaSekolahPage() {
 
   const handleDeleteHeadmaster = () => {
     if (headmasterToDelete) {
-      setUsers(users.filter((u) => u.id !== headmasterToDelete.id));
+      setHeadmasters(headmasters.filter((u) => u.id !== headmasterToDelete.id)); // Mock delete
       closeDeleteModal();
     }
   };
@@ -82,14 +98,14 @@ export default function ManajemenKepalaSekolahPage() {
     {
       header: "Status",
       accessor: (row: Headmaster) => (
-         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${row.status === "active" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${row.status === "active" ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
           {row.status === "active" ? "Aktif" : "Tidak Aktif"}
         </span>
       ),
     },
     {
-        header: "Terakhir Login",
-        accessor: (row: Headmaster) => new Date(row.lastLogin).toLocaleDateString(),
+      header: "Terakhir Login",
+      accessor: (row: Headmaster) => row.lastLogin ? new Date(row.lastLogin).toLocaleDateString() : '-',
     },
     {
       header: "Aksi",
@@ -113,14 +129,18 @@ export default function ManajemenKepalaSekolahPage() {
           <div className="p-6 border-b border-gray-200 flex justify-between items-center">
             <h2 className="text-lg font-semibold">Data Kepala Sekolah</h2>
             <button onClick={() => handleOpenModal()} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                Tambah Kepala Sekolah
+              Tambah Kepala Sekolah
             </button>
           </div>
-          <Table
-            columns={columns}
-            data={headmasters}
-            keyExtractor={(row) => row.id}
-          />
+          {loading ? (
+            <div className="p-10 text-center">Loading data...</div>
+          ) : (
+            <Table
+              columns={columns}
+              data={headmasters}
+              keyExtractor={(row) => row.id}
+            />
+          )}
         </div>
       </div>
 
@@ -173,13 +193,12 @@ function HeadmasterFormModal({
 }: {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (formData: Omit<Headmaster, "id" | "role" | "password" | "lastLogin" | "avatar">) => void;
+  onSave: (formData: any) => void;
   headmaster: Headmaster | null;
 }) {
   const [formData, setFormData] = useState({
     name: headmaster?.name || "",
     email: headmaster?.email || "",
-    schoolId: headmaster?.schoolId || "sch-001", // Default schoolId
     status: headmaster?.status || "active",
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -219,11 +238,11 @@ function HeadmasterFormModal({
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <input type="text" name="name" value={formData.name} onChange={handleChange} placeholder="Nama Lengkap" required className={`w-full border p-2 rounded-md ${errors.name ? 'border-red-500' : 'border-gray-300'}`}/>
+          <input type="text" name="name" value={formData.name} onChange={handleChange} placeholder="Nama Lengkap" required className={`w-full border p-2 rounded-md ${errors.name ? 'border-red-500' : 'border-gray-300'}`} />
           {errors.name && <p className="text-xs text-red-600 mt-1">{errors.name}</p>}
         </div>
         <div>
-          <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="Email" required className={`w-full border p-2 rounded-md ${errors.email ? 'border-red-500' : 'border-gray-300'}`}/>
+          <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="Email" required className={`w-full border p-2 rounded-md ${errors.email ? 'border-red-500' : 'border-gray-300'}`} />
           {errors.email && <p className="text-xs text-red-600 mt-1">{errors.email}</p>}
         </div>
         <select name="status" value={formData.status} onChange={handleChange} className="w-full border p-2 rounded-md">

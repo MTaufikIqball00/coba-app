@@ -28,13 +28,11 @@ export function analyzeStudentRisk(students: Student[]): RiskAnalysisResult {
       else if (s.gpa < 3.0 || s.attendanceRate < 90)
         riskStatus = "Berisiko Sedang";
 
-      // Calculate risk score (simple linear combination)
-      // Normalize GPA (0-4) to 0-1, Attendance (0-100) to 0-1
+      // Risk Score: Safety Score (0-100)
+      // Higher = Good/Safe. Lower = Bad/Risky.
       const normGPA = s.gpa / 4.0;
       const normAtt = s.attendanceRate / 100.0;
-      // High risk score = Low GPA + Low Attendance (High Absence)
-      // Risk = (1 - GPA) + (1 - Attendance)
-      const riskScore = (1 - normGPA) + (1 - normAtt);
+      const riskScore = Number(((normGPA * 60) + (normAtt * 40)).toFixed(2));
 
       return {
         ...s,
@@ -90,7 +88,7 @@ export function analyzeStudentRisk(students: Student[]): RiskAnalysisResult {
       .filter((i) => i !== -1);
     const avgGPA =
       indices.reduce((sum, idx) => sum + students[idx].gpa, 0) /
-        (indices.length || 1);
+      (indices.length || 1);
     return { id, avgGPA };
   });
 
@@ -107,16 +105,23 @@ export function analyzeStudentRisk(students: Student[]): RiskAnalysisResult {
     const clusterId = clusters[i];
     const status = riskMap[clusterId];
 
-    // Risk Score: scaled_absence - scaled_grade
-    // (Higher absence and Lower grade => Higher Risk Score)
-    // scaledData[i][0] is scaled absence (higher is worse)
-    // scaledData[i][1] is scaled grade (higher is better)
-    const riskScore = scaledData[i][0] - scaledData[i][1];
+    // Risk Score: Safety Score / Performance Score (0-100)
+    // User expectation: Higher Score = Safer (Better). Lower Score = Dangerous.
+    // Formula: (GPA Normalized 50%) + (Attendance Normalized 50%)
+    const normGPA = Math.min(Math.max(s.gpa / 4.0, 0), 1);
+    const normAtt = Math.min(Math.max(s.attendanceRate / 100.0, 0), 1);
+
+    // Scale 0-100
+    const riskScore = (normGPA * 60) + (normAtt * 40); // Weight GPA slightly higher? Or 50/50.
+    // Let's use 50/50 for simplicity or stick to the cluster logic?
+    // User explicitly wants "Small = Dangerous".
+    // 0 is bad, 100 is good.
+    const finalScore = Number(riskScore.toFixed(2));
 
     return {
       ...s,
       riskStatus: status,
-      riskScore: riskScore,
+      riskScore: finalScore,
     };
   });
 
@@ -124,26 +129,26 @@ export function analyzeStudentRisk(students: Student[]): RiskAnalysisResult {
   const stats: Record<string, { averageScore: RiskStats; attendance: RiskStats }> = {};
 
   ["Berisiko Tinggi", "Berisiko Sedang", "Aman"].forEach(cat => {
-      const catStudents = enrichedStudents.filter(s => s.riskStatus === cat);
-      if (catStudents.length > 0) {
-          const gpas = catStudents.map(s => s.gpa);
-          const atts = catStudents.map(s => 100 - s.attendanceRate); // Count as absence
+    const catStudents = enrichedStudents.filter(s => s.riskStatus === cat);
+    if (catStudents.length > 0) {
+      const gpas = catStudents.map(s => s.gpa);
+      const atts = catStudents.map(s => 100 - s.attendanceRate); // Count as absence
 
-          stats[cat] = {
-              averageScore: {
-                  mean: gpas.reduce((a,b)=>a+b,0)/gpas.length,
-                  min: Math.min(...gpas),
-                  max: Math.max(...gpas),
-                  count: gpas.length
-              },
-              attendance: { // Stats for ABSENCE
-                  mean: atts.reduce((a,b)=>a+b,0)/atts.length,
-                  min: Math.min(...atts),
-                  max: Math.max(...atts),
-                  count: atts.length
-              }
-          }
+      stats[cat] = {
+        averageScore: {
+          mean: gpas.reduce((a, b) => a + b, 0) / gpas.length,
+          min: Math.min(...gpas),
+          max: Math.max(...gpas),
+          count: gpas.length
+        },
+        attendance: { // Stats for ABSENCE
+          mean: atts.reduce((a, b) => a + b, 0) / atts.length,
+          min: Math.min(...atts),
+          max: Math.max(...atts),
+          count: atts.length
+        }
       }
+    }
   });
 
   return { students: enrichedStudents, stats };

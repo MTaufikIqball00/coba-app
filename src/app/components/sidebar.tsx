@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import LogoutButton from "./LogoutButton";
-import { RESTRICTED_FEATURES_FOR_NON_JABAR } from "../../lib/dummy-data/feature-restrictions";
+import { RESTRICTED_FEATURES_FOR_NON_JABAR } from "../../lib/auth/restrictions";
 
 // Define a type for the user data from localStorage
 interface User {
@@ -118,7 +118,7 @@ const superAdminSubMenu: MenuItem[] = [
 
 const Sidebar = () => {
   const pathname = usePathname();
-  
+
   // ✅ FIX: Initialize with null, load in useEffect
   const [user, setUser] = useState<User | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -194,7 +194,7 @@ const Sidebar = () => {
     if (isNonJabar && (user.role === "student" || user.role === "teacher")) {
       const restrictedHrefs =
         (RESTRICTED_FEATURES_FOR_NON_JABAR as Record<string, string[]>)[
-          user.role
+        user.role
         ] || [];
       mainMenus = mainMenus.filter(
         (item) => !restrictedHrefs.includes(item.href)
@@ -260,9 +260,8 @@ const Sidebar = () => {
       <Link
         href={item.href}
         onClick={() => handleMenuClick(item.name)}
-        className={`${commonClasses} ${
-          isActive ? activeClasses : inactiveClasses
-        }`}
+        className={`${commonClasses} ${isActive ? activeClasses : inactiveClasses
+          }`}
       >
         <span className="mr-3 flex-shrink-0 w-5 h-5 flex items-center justify-center text-lg">
           {item.icon}
@@ -304,9 +303,8 @@ const Sidebar = () => {
       <Link
         href={item.href}
         onClick={() => handleMenuClick(item.name)}
-        className={`${commonClasses} ${
-          isActive ? activeClasses : inactiveClasses
-        }`}
+        className={`${commonClasses} ${isActive ? activeClasses : inactiveClasses
+          }`}
       >
         <span className="mr-3 flex-shrink-0 w-6 h-6 flex items-center justify-center text-xl">
           {item.icon}
@@ -517,9 +515,8 @@ const Sidebar = () => {
 
       {/* Mobile Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#2366d1] text-white shadow-xl transform transition-transform duration-300 ease-in-out lg:hidden ${
-          isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#2366d1] text-white shadow-xl transform transition-transform duration-300 ease-in-out lg:hidden ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+          }`}
       >
         <div className="flex flex-col justify-between min-h-full">
           <div className="flex items-center justify-between p-4 border-b border-white/20 h-16">

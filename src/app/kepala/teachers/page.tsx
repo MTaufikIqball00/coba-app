@@ -1,9 +1,15 @@
 "use client";
-import React, { useState } from "react";
-import { dummyTeachers } from "../../../lib/dummy-data/teachers";
+import React, { useState, useEffect } from "react";
 import Modal from "../../components/admin/Modal";
 
-type Teacher = typeof dummyTeachers[0];
+// Simplified type based on API response
+interface Teacher {
+  id: string;
+  name: string;
+  subject: string;
+  teachingHours: number;
+  classes: string[];
+}
 
 function TeacherDetailModal({
   teacher,
@@ -55,10 +61,24 @@ function TeacherDetailModal({
 }
 
 export default function DaftarGuruPage() {
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
 
-  const filteredTeachers = dummyTeachers.filter(
+  useEffect(() => {
+    fetchTeachers();
+  }, []);
+
+  const fetchTeachers = async () => {
+    try {
+      const res = await fetch('/api/school-admin/teachers');
+      if (res.ok) setTeachers(await res.json());
+    } catch (e) { console.error(e); }
+    finally { setLoading(false); }
+  };
+
+  const filteredTeachers = teachers.filter(
     (teacher) =>
       teacher.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       teacher.subject.toLowerCase().includes(searchTerm.toLowerCase())
@@ -112,95 +132,101 @@ export default function DaftarGuruPage() {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Nama
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Mata Pelajaran
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Kelas yang Diampu
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Jam Mengajar / Minggu
-                  </th>
-                  <th scope="col" className="relative px-6 py-3">
-                    <span className="sr-only">Aksi</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredTeachers.map((teacher) => (
-                  <tr key={teacher.id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10">
-                          <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
-                            {teacher.name.charAt(0)}
-                          </div>
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            {teacher.name}
-                          </div>
-                          <div className="text-sm text-gray-500">
-                            ID: {teacher.id}
-                          </div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        {teacher.subject}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex flex-wrap gap-1">
-                        {teacher.classes.map((c) => (
-                          <span
-                            key={c}
-                            className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800"
-                          >
-                            {c}
-                          </span>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {teacher.teachingHours} jam
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => handleOpenModal(teacher)}
-                        className="text-indigo-600 hover:text-indigo-900"
-                      >
-                        Detail
-                      </button>
-                    </td>
+          {loading ? (
+            <div className="p-10 text-center">Loading teachers...</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Nama
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Mata Pelajaran
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Kelas yang Diampu
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                    >
+                      Jam Mengajar / Minggu
+                    </th>
+                    <th scope="col" className="relative px-6 py-3">
+                      <span className="sr-only">Aksi</span>
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredTeachers.length === 0 ? (
+                    <tr><td colSpan={5} className="text-center py-4 text-gray-500">Tidak ada data guru.</td></tr>
+                  ) : filteredTeachers.map((teacher) => (
+                    <tr key={teacher.id}>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0 h-10 w-10">
+                            <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold">
+                              {teacher.name.charAt(0)}
+                            </div>
+                          </div>
+                          <div className="ml-4">
+                            <div className="text-sm font-medium text-gray-900">
+                              {teacher.name}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              ID: {teacher.id}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {teacher.subject}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex flex-wrap gap-1">
+                          {teacher.classes.map((c) => (
+                            <span
+                              key={c}
+                              className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800"
+                            >
+                              {c}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {teacher.teachingHours} jam
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button
+                          onClick={() => handleOpenModal(teacher)}
+                          className="text-indigo-600 hover:text-indigo-900"
+                        >
+                          Detail
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
           <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
             <p className="text-sm text-gray-600">
-              Menampilkan {filteredTeachers.length} dari {dummyTeachers.length}{" "}
+              Menampilkan {filteredTeachers.length} dari {teachers.length}{" "}
               guru
             </p>
           </div>

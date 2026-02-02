@@ -1,18 +1,49 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import PageHeader from "../../../components/admin/PageHeader";
 import Table from "../../../components/admin/Table";
 import Modal from "../../../components/admin/Modal";
 import { EditButton, DeleteButton } from "../../../components/admin/ActionButton";
-import { schools as initialSchools, School } from "../../../../lib/dummy-data/schools";
 
-// Helper to generate a unique ID for new schools
-const generateNewId = () => `sch-${Date.now()}`;
+// Types
+export interface School {
+  id: string;
+  name: string;
+  address: string;
+  city: string;
+  province: string;
+  postalCode: string;
+  phone: string;
+  email: string;
+  headmaster: string;
+  subscriptionStatus: "active" | "limited" | "expired" | "none";
+  registeredDate: string;
+  logo: string;
+  level: string;
+  academicYear: string;
+  userCapacity: number;
+}
 
 const ManajemenSekolahPage = () => {
-  const [schools, setSchools] = useState<School[]>(initialSchools);
+  const [schools, setSchools] = useState<School[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentSchool, setCurrentSchool] = useState<School | null>(null);
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const res = await fetch('/api/admin/schools');
+      if (res.ok) setSchools(await res.json());
+    } catch (error) {
+      console.error("Failed to fetch schools", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleOpenModal = (school: School | null = null) => {
     setCurrentSchool(school);
@@ -24,29 +55,39 @@ const ManajemenSekolahPage = () => {
     setCurrentSchool(null);
   };
 
-  const handleSave = (schoolData: Omit<School, "id" | "registeredDate">) => {
-    if (currentSchool) {
-      // Update existing school
-      setSchools(
-        schools.map((s) =>
-          s.id === currentSchool.id ? { ...s, ...schoolData } : s
-        )
-      );
-    } else {
-      // Add new school
-      const newSchool: School = {
-        ...schoolData,
-        id: generateNewId(),
-        registeredDate: new Date().toISOString().split("T")[0],
-      };
-      setSchools([...schools, newSchool]);
+  const handleSave = async (schoolData: Omit<School, "id" | "registeredDate">) => {
+    try {
+      const method = currentSchool ? 'PUT' : 'POST';
+      const url = currentSchool ? `/api/admin/schools/${currentSchool.id}` : '/api/admin/schools';
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(schoolData)
+      });
+
+      if (res.ok) {
+        fetchData();
+        handleCloseModal();
+      } else {
+        alert('Gagal menyimpan data');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Terjadi kesalahan');
     }
-    handleCloseModal();
   };
 
-  const handleDelete = (schoolId: string) => {
+  const handleDelete = async (schoolId: string) => {
     if (window.confirm("Apakah Anda yakin ingin menghapus sekolah ini?")) {
-      setSchools(schools.filter((s) => s.id !== schoolId));
+      try {
+        const res = await fetch(`/api/admin/schools/${schoolId}`, { method: 'DELETE' });
+        if (res.ok) {
+          setSchools(schools.filter((s) => s.id !== schoolId));
+        } else {
+          alert("Gagal menghapus");
+        }
+      } catch (e) { console.error(e); }
     }
   };
 
@@ -73,15 +114,14 @@ const ManajemenSekolahPage = () => {
       header: "Status Langganan",
       accessor: (row: School) => (
         <span
-          className={`px-3 py-1.5 text-xs font-semibold rounded-full capitalize ${
-            row.subscriptionStatus === "active"
+          className={`px-3 py-1.5 text-xs font-semibold rounded-full capitalize ${row.subscriptionStatus === "active"
               ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
               : row.subscriptionStatus === "limited"
-              ? "bg-amber-50 text-amber-700 border border-amber-200"
-              : row.subscriptionStatus === "expired"
-              ? "bg-rose-50 text-rose-700 border border-rose-200"
-              : "bg-slate-50 text-slate-600 border border-slate-200"
-          }`}
+                ? "bg-amber-50 text-amber-700 border border-amber-200"
+                : row.subscriptionStatus === "expired"
+                  ? "bg-rose-50 text-rose-700 border border-rose-200"
+                  : "bg-slate-50 text-slate-600 border border-slate-200"
+            }`}
         >
           {row.subscriptionStatus}
         </span>
@@ -122,7 +162,11 @@ const ManajemenSekolahPage = () => {
               </button>
             </div>
           </div>
-          <Table columns={columns} data={schools} keyExtractor={(s) => s.id} />
+          {loading ? (
+            <div className="p-10 text-center">Loading data...</div>
+          ) : (
+            <Table columns={columns} data={schools} keyExtractor={(s) => s.id} />
+          )}
         </div>
         <div className="h-12"></div>
       </main>

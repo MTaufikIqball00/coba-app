@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { verifyJwtToken } from "../src/lib/auth/jwt";
-import { isFeatureRestricted } from "../src/lib/dummy-data/feature-restrictions";
+import { isFeatureRestricted } from "../src/lib/auth/restrictions";
 import type { UserRole, UserSession } from "../src/app/types/attendance";
 
 // --- Path Definitions ---
@@ -101,10 +101,10 @@ export async function middleware(request: NextRequest) {
         session.role === "teacher"
           ? "/teacher/dashboard"
           : session.role === "kepala_sekolah"
-          ? "/kepala/dashboard"
-          : session.role === "admin_sekolah"
-          ? "/admin-sekolah/dashboard"
-          : "/admin/langganan";
+            ? "/kepala/dashboard"
+            : session.role === "admin_sekolah"
+              ? "/admin-sekolah/dashboard"
+              : "/admin/langganan";
       return NextResponse.redirect(new URL(redirectUrl, request.url));
     }
 

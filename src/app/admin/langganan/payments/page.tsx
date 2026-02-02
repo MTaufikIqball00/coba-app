@@ -1,30 +1,63 @@
 "use client";
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import PageHeader from "../../../components/admin/PageHeader";
 import Table from "../../../components/admin/Table";
 import Modal from "../../../components/admin/Modal";
 import { EditButton } from "../../../components/admin/ActionButton";
-import { payments as initialPayments, Payment } from "../../../../lib/dummy-data/payments";
-import { schools } from "../../../../lib/dummy-data/schools";
 
-const statusStyles = {
+// Types
+export interface Payment {
+  id: string;
+  invoiceNumber: string; // Add if API has it (current API might not, let's map id to invoice for now)
+  schoolId: string;
+  amount: number;
+  date: string;
+  status: "completed" | "pending" | "failed";
+  method: "bank_transfer" | "credit_card" | "virtual_account";
+  proofOfPayment?: string;
+  schoolName?: string; // Enhanced from API
+}
+
+const statusStyles: Record<string, string> = {
   completed: "bg-emerald-50 text-emerald-700",
   pending: "bg-amber-50 text-amber-700",
   failed: "bg-rose-50 text-rose-700",
 };
 
-const methodDisplayNames = {
+const methodDisplayNames: Record<string, string> = {
   bank_transfer: "Bank Transfer",
   credit_card: "Credit Card",
   virtual_account: "Virtual Account",
 };
 
 const PembayaranPage = () => {
-  const [payments, setPayments] = useState<Payment[]>(initialPayments);
+  const [payments, setPayments] = useState<Payment[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentPayment, setCurrentPayment] = useState<Payment | null>(null);
 
-  const schoolMap = useMemo(() => new Map(schools.map(s => [s.id, s.name])), []);
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const res = await fetch('/api/admin/payments');
+      if (res.ok) {
+        const data = await res.json();
+        // Normalize data if needed (e.g. invoiceNumber mapping)
+        const mappedData = data.map((d: any) => ({
+          ...d,
+          invoiceNumber: d.id // Mock
+        }));
+        setPayments(mappedData);
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleOpenModal = (payment: Payment) => {
     setCurrentPayment(payment);
@@ -59,7 +92,7 @@ const PembayaranPage = () => {
     },
     {
       header: "Nama Sekolah",
-      accessor: (row: Payment) => schoolMap.get(row.schoolId) || "N/A",
+      accessor: (row: Payment) => row.schoolName || "N/A",
     },
     {
       header: "Jumlah",
@@ -73,9 +106,8 @@ const PembayaranPage = () => {
       header: "Status",
       accessor: (row: Payment) => (
         <span
-          className={`px-3 py-1.5 text-xs font-semibold rounded-full capitalize ${
-            statusStyles[row.status]
-          }`}
+          className={`px-3 py-1.5 text-xs font-semibold rounded-full capitalize ${statusStyles[row.status] || ''
+            }`}
         >
           {row.status}
         </span>
@@ -102,7 +134,11 @@ const PembayaranPage = () => {
 
       <main className="max-w-7xl mx-auto px-6 -mt-8">
         <div className="bg-white rounded-xl shadow-sm border border-sky-100 overflow-hidden">
-          <Table columns={columns} data={payments} keyExtractor={(p) => p.id} />
+          {loading ? (
+            <div className="p-10 text-center">Loading data...</div>
+          ) : (
+            <Table columns={columns} data={payments} keyExtractor={(p) => p.id} />
+          )}
         </div>
         <div className="h-12"></div>
       </main>
@@ -135,7 +171,7 @@ const PaymentForm: React.FC<{
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ ...prev, [name]: value as any }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {

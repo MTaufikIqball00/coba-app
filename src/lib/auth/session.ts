@@ -4,9 +4,11 @@ import { jwtVerify } from "jose";
 import { cookies } from "next/headers";
 
 export interface UserSession {
-  userId: string;
-  role: "student" | "teacher";
+  id: string; // Changed from userId to id to match common usage
+  userId?: string; // Keep for backward compatibility if needed
+  role: "student" | "teacher" | "admin_sekolah" | "admin_langganan" | "headmaster";
   name: string;
+  schoolId?: string;
   iat: number;
   exp: number;
 }

@@ -1,9 +1,22 @@
 "use client";
-import React, { useState } from "react";
-import { dummyStudents } from "../../../lib/dummy-data/students";
+import React, { useState, useEffect } from "react";
 import Modal from "../../components/admin/Modal";
 
-type Student = typeof dummyStudents[0];
+// Simplified Type for Student
+interface Student {
+  id: string;
+  name: string;
+  profile: {
+    nisn: string;
+    gender: string;
+    dateOfBirth: string;
+    address: string;
+  };
+  class: string;
+  status: "active" | "inactive";
+  activityLevel: number;
+  averageScore: number;
+}
 
 function StudentDetailModal({
   student,
@@ -40,11 +53,25 @@ function StudentDetailModal({
 
 
 export default function DaftarMuridPage() {
+  const [students, setStudents] = useState<Student[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
-  const filteredStudents = dummyStudents
+  useEffect(() => {
+    fetchStudents();
+  }, []);
+
+  const fetchStudents = async () => {
+    try {
+      const res = await fetch('/api/school-admin/students');
+      if (res.ok) setStudents(await res.json());
+    } catch (e) { console.error(e); }
+    finally { setLoading(false); }
+  };
+
+  const filteredStudents = students
     .filter((student) =>
       student.name.toLowerCase().includes(searchTerm.toLowerCase())
     )
@@ -53,9 +80,9 @@ export default function DaftarMuridPage() {
     );
 
   const stats = {
-    total: dummyStudents.length,
-    active: dummyStudents.filter((s) => s.status === "active").length,
-    inactive: dummyStudents.filter((s) => s.status === "inactive").length,
+    total: students.length,
+    active: students.filter((s) => s.status === "active").length,
+    inactive: students.filter((s) => s.status === "inactive").length,
   };
 
   const statusStyles: { [key: string]: string } = {
@@ -87,15 +114,21 @@ export default function DaftarMuridPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <div className="bg-white rounded-lg shadow-sm p-5 border-l-4 border-blue-500">
             <p className="text-sm font-medium text-gray-500">Total Murid</p>
-            <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
+            <p className="text-3xl font-bold text-gray-900">
+              {loading ? '...' : stats.total}
+            </p>
           </div>
           <div className="bg-white rounded-lg shadow-sm p-5 border-l-4 border-green-500">
             <p className="text-sm font-medium text-gray-500">Murid Aktif</p>
-            <p className="text-3xl font-bold text-gray-900">{stats.active}</p>
+            <p className="text-3xl font-bold text-gray-900">
+              {loading ? '...' : stats.active}
+            </p>
           </div>
           <div className="bg-white rounded-lg shadow-sm p-5 border-l-4 border-red-500">
             <p className="text-sm font-medium text-gray-500">Murid Tidak Aktif</p>
-            <p className="text-3xl font-bold text-gray-900">{stats.inactive}</p>
+            <p className="text-3xl font-bold text-gray-900">
+              {loading ? '...' : stats.inactive}
+            </p>
           </div>
         </div>
 
@@ -122,70 +155,75 @@ export default function DaftarMuridPage() {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Profil Murid
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Kelas
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Aksi
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredStudents.map((student) => (
-                  <tr key={student.id}>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center">
-                        <div className="h-11 w-11 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold">
-                          {student.name.charAt(0)}
-                        </div>
-                        <div className="ml-4">
-                          <p className="font-semibold text-gray-900">
-                            {student.name}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            NISN: {student.profile.nisn}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-700">
-                      {student.class}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`px-3 py-1 inline-flex text-xs font-semibold rounded-full ${
-                          statusStyles[student.status]
-                        }`}
-                      >
-                        {student.status === "active" ? "Aktif" : "Tidak Aktif"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm font-medium">
-                      <button
-                        onClick={() => handleOpenModal(student)}
-                        className="text-blue-600 hover:text-blue-800"
-                      >
-                        Lihat Profil
-                      </button>
-                    </td>
+          {loading ? (
+            <div className="p-10 text-center">Loading students...</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Profil Murid
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Kelas
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Aksi
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredStudents.length === 0 ? (
+                    <tr><td colSpan={4} className="text-center py-4 text-gray-500">Tidak ada data murid.</td></tr>
+                  ) : filteredStudents.map((student) => (
+                    <tr key={student.id}>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center">
+                          <div className="h-11 w-11 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold">
+                            {student.name.charAt(0)}
+                          </div>
+                          <div className="ml-4">
+                            <p className="font-semibold text-gray-900">
+                              {student.name}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              NISN: {student.profile.nisn}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-700">
+                        {student.class}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={`px-3 py-1 inline-flex text-xs font-semibold rounded-full ${statusStyles[student.status]
+                            }`}
+                        >
+                          {student.status === "active" ? "Aktif" : "Tidak Aktif"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm font-medium">
+                        <button
+                          onClick={() => handleOpenModal(student)}
+                          className="text-blue-600 hover:text-blue-800"
+                        >
+                          Lihat Profil
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
           <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
             <p className="text-sm text-gray-600">
-              Menampilkan {filteredStudents.length} dari {dummyStudents.length} murid
+              Menampilkan {filteredStudents.length} dari {students.length} murid
             </p>
           </div>
         </div>

@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { verifyJwtToken } from "../../lib/auth/jwt";
 import ForumClientUI from "../components/forum/ForumClientUI";
-import { FORUM_CLASSES } from "../../lib/dummy-data/forum-classes";
+import pool from "../../lib/db";
 
 type Room = {
   id: string;
@@ -14,33 +14,6 @@ type Room = {
 };
 
 import { UserSession } from "../../../src/app/types/attendance";
-
-// Dynamically generate subject rooms from the keys of FORUM_CLASSES
-const subjectRooms: Room[] = Object.keys(FORUM_CLASSES).map((subjectKey) => {
-  const name = subjectKey.charAt(0).toUpperCase() + subjectKey.slice(1);
-  return {
-    id: subjectKey,
-    name: name,
-    subject: subjectKey, // Use lowercase key for URL
-    callId: `${subjectKey}-main-call`,
-    participants: Math.floor(Math.random() * 70) + 5,
-    isActive: Math.random() > 0.6,
-  };
-});
-
-const allRooms: Room[] = [
-  // This object is now structured to link directly to the final discussion page
-  {
-    id: "umum-general",
-    name: "Forum Umum",
-    subject: "umum",
-    classId: "general",
-    callId: "general-meeting",
-    participants: 127,
-    isActive: true,
-  },
-  ...subjectRooms,
-];
 
 export async function getSession(): Promise<UserSession | null> {
   const cookieStore = await cookies(); // ⬅ pakai await di sini
@@ -60,8 +33,23 @@ export async function getSession(): Promise<UserSession | null> {
 export default async function ForumHomePage() {
   const session = await getSession();
 
-  // Filtering is handled on the next page ([subject]/page.tsx). This page should show all available subjects.
-  const roomsToShow = allRooms;
+  // Fetch rooms from DB
+  let roomsToShow: Room[] = [];
+  try {
+    const [rows]: [any[], any] = await pool.query("SELECT * FROM forum_rooms WHERE is_active = 1");
+    roomsToShow = rows.map((row: any) => ({
+      id: row.id,
+      name: row.name,
+      subject: row.subject,
+      classId: row.class_id,
+      callId: row.call_id,
+      participants: row.participants,
+      isActive: Boolean(row.is_active)
+    }));
+  } catch (error) {
+    console.error("Failed to fetch forum rooms:", error);
+    // Fallback to empty or error state handling logic if needed
+  }
 
   const totalParticipants = roomsToShow.reduce(
     (sum, room) => sum + (room.participants || 0),

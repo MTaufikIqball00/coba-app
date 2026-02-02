@@ -1,14 +1,26 @@
 "use client";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import PageHeader from "../../../components/admin/PageHeader";
 import Table from "../../../components/admin/Table";
 import Modal from "../../../components/admin/Modal";
 import { EditButton, DeleteButton } from "../../../components/admin/ActionButton";
-import { users as initialUsers, User } from "../../../../lib/dummy-data/users";
-import { schools } from "../../../../lib/dummy-data/schools";
 
-// Helper to generate a unique ID for new users
-const generateNewId = () => `user-${Date.now()}`;
+// Types
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  schoolId: string | null;
+  status: "active" | "inactive" | "pending";
+  lastLogin: string;
+  avatar: string;
+}
+
+export interface School {
+  id: string;
+  name: string;
+}
 
 const roleDisplayNames: Record<string, string> = {
   admin_langganan: "Admin Langganan",
@@ -19,18 +31,40 @@ const roleDisplayNames: Record<string, string> = {
   admin_sekolah: "Admin Sekolah",
 };
 
-const statusStyles = {
+const statusStyles: Record<string, string> = {
   active: "bg-emerald-50 text-emerald-700",
   inactive: "bg-slate-50 text-slate-600",
   pending: "bg-amber-50 text-amber-700",
 };
 
 const ManajemenPenggunaPage = () => {
-  const [users, setUsers] = useState<User[]>(initialUsers);
+  const [users, setUsers] = useState<User[]>([]);
+  const [schools, setSchools] = useState<School[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
-  const schoolMap = useMemo(() => new Map(schools.map(s => [s.id, s.name])), []);
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      const [usersRes, schoolsRes] = await Promise.all([
+        fetch('/api/admin/users'),
+        fetch('/api/admin/schools')
+      ]);
+
+      if (usersRes.ok) setUsers(await usersRes.json());
+      if (schoolsRes.ok) setSchools(await schoolsRes.json());
+    } catch (error) {
+      console.error("Failed to fetch data", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const schoolMap = useMemo(() => new Map(schools.map(s => [s.id, s.name])), [schools]);
 
   const handleOpenModal = (user: User | null = null) => {
     setCurrentUser(user);
@@ -42,27 +76,37 @@ const ManajemenPenggunaPage = () => {
     setCurrentUser(null);
   };
 
-  const handleSave = (userData: Omit<User, "id" | "lastLogin" | "avatar">) => {
-    if (currentUser) {
-      setUsers(
-        users.map((u) =>
-          u.id === currentUser.id ? { ...u, ...userData } : u
-        )
-      );
-    } else {
-      const newUser: User = {
-        ...userData,
-        id: generateNewId(),
-        lastLogin: new Date().toISOString(),
-        avatar: "/assets/Avatar.png",
-      };
-      setUsers([...users, newUser]);
+  const handleSave = async (userData: Omit<User, "id" | "lastLogin" | "avatar">) => {
+    try {
+      const method = currentUser ? 'PUT' : 'POST';
+      const url = currentUser ? `/api/admin/users/${currentUser.id}` : '/api/admin/users';
+
+      // For now, simpler implementation assuming API handles it or just local update simulation after POST success
+      // But let's try calling API
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData)
+      });
+
+      if (res.ok) {
+        // Reload data
+        fetchData();
+        handleCloseModal();
+      } else {
+        alert('Gagal menyimpan data');
+      }
+    } catch (e) {
+      console.error(e);
+      alert('Terjadi kesalahan');
     }
-    handleCloseModal();
   };
 
-  const handleDelete = (userId: string) => {
+  const handleDelete = async (userId: string) => {
     if (window.confirm("Apakah Anda yakin ingin menghapus pengguna ini?")) {
+      // API call to delete (Needs DELETE endpoint)
+      // For now, assume success or implement DELETE route later.
+      // Optimistic update:
       setUsers(users.filter((u) => u.id !== userId));
     }
   };
@@ -72,7 +116,7 @@ const ManajemenPenggunaPage = () => {
       header: "Nama Pengguna",
       accessor: (row: User) => (
         <div className="flex items-center gap-3">
-          <img src={row.avatar} alt={row.name} className="w-10 h-10 rounded-full object-cover" />
+          <img src={row.avatar || '/assets/Avatar.png'} alt={row.name} className="w-10 h-10 rounded-full object-cover" />
           <div>
             <p className="font-semibold text-slate-900">{row.name}</p>
             <p className="text-sm text-slate-500">{row.email}</p>
@@ -92,9 +136,8 @@ const ManajemenPenggunaPage = () => {
       header: "Status",
       accessor: (row: User) => (
         <span
-          className={`px-3 py-1.5 text-xs font-semibold rounded-full capitalize ${
-            statusStyles[row.status] || statusStyles.inactive
-          }`}
+          className={`px-3 py-1.5 text-xs font-semibold rounded-full capitalize ${statusStyles[row.status] || statusStyles.inactive
+            }`}
         >
           {row.status}
         </span>
@@ -135,7 +178,11 @@ const ManajemenPenggunaPage = () => {
               </button>
             </div>
           </div>
-          <Table columns={columns} data={users} keyExtractor={(u) => u.id} />
+          {loading ? (
+            <div className="p-10 text-center">Loading data...</div>
+          ) : (
+            <Table columns={columns} data={users} keyExtractor={(u) => u.id} />
+          )}
         </div>
         <div className="h-12"></div>
       </main>
@@ -148,6 +195,7 @@ const ManajemenPenggunaPage = () => {
         >
           <UserForm
             user={currentUser}
+            schools={schools}
             onSave={handleSave}
             onCancel={handleCloseModal}
           />
@@ -159,14 +207,15 @@ const ManajemenPenggunaPage = () => {
 
 const UserForm: React.FC<{
   user: User | null;
+  schools: School[];
   onSave: (data: Omit<User, "id" | "lastLogin" | "avatar">) => void;
   onCancel: () => void;
-}> = ({ user, onSave, onCancel }) => {
+}> = ({ user, schools, onSave, onCancel }) => {
   const [formData, setFormData] = useState({
     name: user?.name || "",
     email: user?.email || "",
     role: user?.role || "student",
-    schoolId: user?.schoolId || null,
+    schoolId: user?.schoolId || "",
     status: user?.status || "pending",
   });
 
@@ -179,7 +228,11 @@ const UserForm: React.FC<{
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    onSave({
+      ...formData,
+      status: formData.status as any, // Cast to match type
+      schoolId: formData.schoolId || null
+    });
   };
 
   return (

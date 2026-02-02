@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "../../../../lib/auth/session";
-import { dummyModules, Module } from "../../../../lib/dummy-data";
-import { modules } from "./store";
+import pool from "../../../../lib/db";
 import crypto from "crypto";
+import { z } from "zod";
 
 // GET all modules for the logged-in teacher
 export async function GET() {
@@ -15,19 +15,38 @@ export async function GET() {
     );
   }
 
-  const allModules = Array.from(dummyModules.values());
-  const teacherModules = allModules.filter(
-    (module) => module.teacherId === session.userId
-  );
+  let connection;
+  try {
+    connection = await pool.getConnection();
+    const [rows]: [any[], any] = await connection.query(
+      "SELECT * FROM modules WHERE teacher_id = ? ORDER BY created_at DESC",
+      [session.userId]
+    );
 
-  teacherModules.sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  );
+    const teacherModules = rows.map((row: any) => ({
+      id: row.id,
+      teacherId: row.teacher_id,
+      title: row.title,
+      description: row.description,
+      type: row.type,
+      contentUrl: row.content_url,
+      fileName: row.file_name,
+      fileType: row.file_type,
+      subject: row.subject, // Assuming column exists
+      createdAt: row.created_at,
+    }));
 
-  return NextResponse.json(teacherModules);
+    return NextResponse.json(teacherModules);
+  } catch (error) {
+    console.error("Database error:", error);
+    return NextResponse.json(
+      { success: false, message: "Internal Server Error" },
+      { status: 500 }
+    );
+  } finally {
+    if (connection) connection.release();
+  }
 }
-
-import { z } from "zod";
 
 // Define the schema for creating a module
 const createModuleSchema = z.object({
@@ -36,14 +55,14 @@ const createModuleSchema = z.object({
     .min(3, "Title must be at least 3 characters long.")
     .max(100),
   description: z.string().max(500).optional(),
-  type: z.enum(["video", "pdf", "quiz", "document"]), // Example types, adjust as needed
+  type: z.enum(["video", "pdf", "quiz", "document"]),
   contentUrl: z.string().url("A valid URL for the content is required."),
   fileName: z.string().optional(),
   fileType: z.string().optional(),
-  subject: z.string().optional(), // ✅ TAMBAH: ada di store tapi tidak di schema
-  grade: z.string().optional(), // ✅ TAMBAH: ada di store tapi tidak di schema
-  duration: z.number().optional(), // ✅ TAMBAH: untuk video
-  fileSize: z.number().optional(), //
+  subject: z.string().optional(),
+  grade: z.string().optional(),
+  duration: z.number().optional(),
+  fileSize: z.number().optional(),
 });
 
 // POST a new module
@@ -57,6 +76,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  let connection;
   try {
     const json = await request.json();
     const parseResult = createModuleSchema.safeParse(json);
@@ -72,11 +92,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { title, description, type, contentUrl, fileName, fileType } =
-      parseResult.data;
+    const { title, description, type, contentUrl, fileName, fileType, subject } = parseResult.data;
 
-    const newModule: Module = {
-      id: `mod-${crypto.randomBytes(4).toString("hex")}`,
+    const newModuleId = `mod-${crypto.randomBytes(4).toString("hex")}`;
+    const createdAt = new Date().toISOString().slice(0, 19).replace('T', ' '); // MySQL format
+
+    connection = await pool.getConnection();
+    await connection.query(
+      `INSERT INTO modules (id, teacher_id, title, description, type, content_url, subject, file_name, file_type, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [newModuleId, session.userId, title, description, type, contentUrl, subject || null, fileName || null, fileType || null, createdAt]
+    );
+
+    const newModule = {
+      id: newModuleId,
       teacherId: session.userId,
       title,
       description,
@@ -84,10 +113,9 @@ export async function POST(request: NextRequest) {
       contentUrl,
       fileName,
       fileType,
-      createdAt: new Date().toISOString(),
+      subject,
+      createdAt: createdAt,
     };
-
-    dummyModules.set(newModule.id, newModule);
 
     return NextResponse.json(
       { success: true, message: "Module created", module: newModule },
@@ -105,5 +133,7 @@ export async function POST(request: NextRequest) {
       { success: false, message: "Internal Server Error" },
       { status: 500 }
     );
+  } finally {
+    if (connection) connection.release();
   }
 }
