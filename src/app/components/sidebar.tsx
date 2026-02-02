@@ -46,6 +46,7 @@ const teacherMainMenu: MenuItem[] = [
   { name: "Manajemen Modul", icon: "📚", href: "/teacher/modules" },
   { name: "Manajemen Tugas", icon: "📝", href: "/teacher/assignment" },
   { name: "Manajemen Kuis", icon: "❓", href: "/teacher/quizzes" },
+  { name: "Analisis Risiko", icon: "📊", href: "/teacher/analysis" },
 ];
 
 const teacherSubMenu: MenuItem[] = [

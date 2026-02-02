@@ -34,6 +34,7 @@ export interface Student {
   // Risk Analysis
   riskStatus?: "Aman" | "Berisiko Sedang" | "Berisiko Tinggi";
   riskScore?: number;
+  rekomendasi?: string;
 
   createdAt: string;
   updatedAt: string;
@@ -68,12 +69,12 @@ export interface StudentActivity {
   id: string;
   studentId: string;
   type:
-    | "login"
-    | "logout"
-    | "quiz_complete"
-    | "forum_post"
-    | "video_join"
-    | "assignment_submit";
+  | "login"
+  | "logout"
+  | "quiz_complete"
+  | "forum_post"
+  | "video_join"
+  | "assignment_submit";
   timestamp: string;
   title: string; // e.g., "Quiz 1 Completed"
   description: string; // e.g., "Logged in from IP

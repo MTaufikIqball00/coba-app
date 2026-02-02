@@ -96,9 +96,9 @@ async function seed() {
                 for (const subjectName of subjects) {
                     let baseScore = s.score;
 
-                    for (let i = 1; i <= 14; i++) {
+                    for (let i = 1; i <= 16; i++) {
                         // Trend Logic per subject
-                        let progress = (i / 14);
+                        let progress = (i / 16);
                         let variance = progress * 30;
 
                         let subjScore = s.trend === 'UP'

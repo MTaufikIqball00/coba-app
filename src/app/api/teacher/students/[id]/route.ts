@@ -20,9 +20,14 @@ export async function GET(request: NextRequest, context: RouteContext) {
   try {
     connection = await pool.getConnection();
 
-    // 1. Fetch Student Profile (w/ User Name)
+    // 1. Fetch Student Profile with Attendance Counts
     const [studentRows]: [any[], any] = await connection.query(`
-        SELECT s.*, u.name, u.email 
+        SELECT 
+            s.*, 
+            u.name, u.email,
+            (SELECT COUNT(*) FROM attendance a WHERE a.student_id = s.id AND a.status = 'sick') as count_sakit,
+            (SELECT COUNT(*) FROM attendance a WHERE a.student_id = s.id AND a.status = 'permission') as count_izin,
+            (SELECT COUNT(*) FROM attendance a WHERE a.student_id = s.id AND a.status = 'absent') as count_alpa
         FROM students s 
         LEFT JOIN users u ON s.user_id = u.id 
         WHERE s.id = ?
@@ -76,27 +81,72 @@ export async function GET(request: NextRequest, context: RouteContext) {
       timestamp: act.timestamp
     }));
 
-    // 5. Calculate Dynamic Risk Score (Safety Score)
-    // Formula matches risk-analysis.ts: (GPA/4 * 60) + (Attendance/100 * 40)
-    // Higher Score = Safer. Lower Score = Dangerous.
-    const normGPA = Math.min(Math.max((student.gpa || 0) / 4.0, 0), 1);
-    const normAtt = Math.min(Math.max((student.attendance_rate || 0) / 100.0, 0), 1);
-    const riskScore = Number(((normGPA * 60) + (normAtt * 40)).toFixed(2));
-
-    // Status Logic 
+    // 5. FLASK API INTEGRATION
     let riskStatus = "Aman";
-    if (riskScore < 50) riskStatus = "Berisiko Tinggi";
-    else if (riskScore < 75) riskStatus = "Berisiko Sedang";
+    let riskScore = 0;
+    let rekomendasi = "";
+
+    // Prepare payload
+    const gradeScores = gradeRows.map((g: any) => parseFloat(g.score));
+    const studentPayload = [{
+      nis: student.student_id || student.id,
+      nama_siswa: student.name,
+      sakit: student.count_sakit || 0,
+      izin: student.count_izin || 0,
+      alpa: student.count_alpa || 0,
+      nilai: gradeScores
+    }];
+
+    try {
+      const flaskResponse = await fetch('http://127.0.0.1:5000/api/analyze_json', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(studentPayload)
+      });
+
+      if (flaskResponse.ok) {
+        const flaskData = await flaskResponse.json();
+        if (flaskData.data_siswa && flaskData.data_siswa.length > 0) {
+          const result = flaskData.data_siswa[0];
+
+          // Map Flask Status to Frontend Status
+          if (result.status_peringatan === '🚨 URGENT') riskStatus = "Berisiko Tinggi";
+          else if (result.status_peringatan === 'WARNING') riskStatus = "Berisiko Sedang";
+          else if (result.status_peringatan === 'WATCH') riskStatus = "Berisiko Sedang";
+          else riskStatus = "Aman";
+
+          riskScore = result.risk_score;
+          rekomendasi = result.rekomendasi;
+        }
+      } else {
+        console.error("Flask API Error (Detail):", await flaskResponse.text());
+        // Fallback to local calculation if Flask fails
+        throw new Error("Flask API failed");
+      }
+
+    } catch (e) {
+      console.warn("Using fallback local calculation due to:", e);
+      // Fallback Logic
+      const rawGPA = student.gpa || (student.average_score / 25) || 0;
+      const normGPA = Math.min(Math.max(rawGPA / 4.0, 0), 1);
+      const rawAtt = student.attendance_rate || student.activity_level || 0;
+      const normAtt = Math.min(Math.max(rawAtt / 100.0, 0), 1);
+      riskScore = Number(((normGPA * 60) + (normAtt * 40)).toFixed(2));
+
+      if (riskScore < 50) riskStatus = "Berisiko Tinggi";
+      else if (riskScore < 75) riskStatus = "Berisiko Sedang";
+    }
 
     // Construct Response
     return NextResponse.json({
       success: true,
       student: {
         ...student,
-        riskScore: riskScore, // Override DB
-        riskStatus: riskStatus // Override DB
+        riskScore: riskScore,
+        riskStatus: riskStatus,
+        rekomendasi: rekomendasi // Add recommendation to student object if UI needs it
       },
-      profile: { student: { ...student, riskScore, riskStatus } },
+      profile: { student: { ...student, riskScore, riskStatus, rekomendasi } },
       grades: { grades: grades, statistics: { gpa: student.gpa || 0 } },
       attendance: { attendance: attendance, statistics: { rate: student.attendance_rate || 0 } },
       activities: { activities: activities, statistics: {} }
